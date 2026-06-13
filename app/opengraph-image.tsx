@@ -30,7 +30,7 @@ export default function OG() {
             display: "flex",
           }}
         >
-          ₹  student loan calc
+          INR  ·  student loan calc
         </div>
         <div
           style={{

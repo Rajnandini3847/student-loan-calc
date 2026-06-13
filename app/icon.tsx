@@ -16,13 +16,13 @@ export default function Icon() {
           justifyContent: "center",
           background: "#FBF8F1",
           color: "#1E5F3F",
-          fontSize: 22,
+          fontSize: 18,
           fontWeight: 800,
           fontFamily: "serif",
           borderRadius: 6,
         }}
       >
-        ₹
+        Rs
       </div>
     ),
     { ...size }
