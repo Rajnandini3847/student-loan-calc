@@ -22,10 +22,13 @@ type SortBy = "fees-asc" | "fees-desc" | "tier";
 type AdmissionFilter = "all" | "no_jee" | AdmissionMode;
 
 export default function CollegesPage() {
-  // Default to engineering since that's the main use case (per Raj)
+  // Default state targets students WITHOUT a JEE Main rank — engineering,
+  // direct-admission / own-exam / state-CET routes only. IITs/NITs/IIITs
+  // are still in the data but hidden by default; one filter click brings
+  // them back.
   const [course, setCourse] = useState<"all" | CourseFocus>("engineering");
   const [tier, setTier] = useState<"all" | CityTier>("all");
-  const [admission, setAdmission] = useState<AdmissionFilter>("all");
+  const [admission, setAdmission] = useState<AdmissionFilter>("no_jee");
   const [minPct, setMinPct] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortBy>("fees-asc");
@@ -60,15 +63,17 @@ export default function CollegesPage() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
       <section className="space-y-2 max-w-2xl">
         <div className="text-[10px] uppercase tracking-[0.25em] text-accent">
-          colleges · value-for-money picks
+          B.Tech colleges · no JEE rank · direct admission
         </div>
         <h1 className="font-display text-3xl sm:text-5xl leading-[1.05] tracking-tight">
-          Good college, <em className="text-accent2">livable</em> city.
+          B.Tech without <em className="text-accent2">JEE Main?</em> Start here.
         </h1>
         <p className="text-muted text-sm sm:text-base">
-          {COLLEGES.length} hand-picked colleges across India. Each fee was verified from the
-          college's official page — and we tracked whether it's published per-semester,
-          per-year, or full-course so the numbers below match reality.
+          Defaulting to engineering colleges that accept students on 10+2 marks
+          or their own entrance test — no JEE Main needed. Each fee is verified
+          from the college's official site and labelled clearly as per-semester,
+          per-year, or full-course. Want IITs/NITs too? Change the{" "}
+          <em>admission</em> filter to "all routes".
         </p>
       </section>
 
