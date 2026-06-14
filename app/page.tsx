@@ -57,6 +57,16 @@ export default function CalculatorPage() {
     taxSlab,
   ]);
 
+  // Compute both interest-strategy scenarios so the user can see savings
+  // side-by-side without flipping the toggle to find out.
+  const scenarios = useMemo(() => {
+    const baseInput = { ...input };
+    return {
+      pileUp: computeLoan({ ...baseInput, payInterestDuringMoratorium: false }),
+      payNow: computeLoan({ ...baseInput, payInterestDuringMoratorium: true }),
+    };
+  }, [loanAmount, rate, courseYears, graceMonths, repaymentYears, taxSlab]);
+
   const comparison = useMemo(() => {
     return BANKS.map((b) => ({
       bank: b,
@@ -148,20 +158,6 @@ export default function CalculatorPage() {
             />
           </Field>
 
-          <label className="flex items-start gap-2.5 cursor-pointer pt-1">
-            <input
-              type="checkbox"
-              checked={payInterestDuringMoratorium}
-              onChange={(e) => setPayInterestDuringMoratorium(e.target.checked)}
-              className="mt-1 accent-accent shrink-0"
-            />
-            <span className="text-xs leading-snug">
-              <span className="font-medium text-sm">Pay interest while studying</span>
-              <br />
-              <span className="text-muted">Saves a lot. See the difference live.</span>
-            </span>
-          </label>
-
           <Field label="Tax slab (for 80E)">
             <select
               value={taxSlab}
@@ -190,6 +186,16 @@ export default function CalculatorPage() {
               for {repaymentYears} years · starts after {fmtMonths(result.moratoriumMonths)}
             </div>
           </div>
+
+          {/* Interest strategy chooser */}
+          <StrategyChooser
+            pileUp={scenarios.pileUp}
+            payNow={scenarios.payNow}
+            selected={payInterestDuringMoratorium ? "pay" : "pile"}
+            onSelect={(v) => setPayInterestDuringMoratorium(v === "pay")}
+            courseYears={courseYears}
+            graceMonths={graceMonths}
+          />
 
           {/* 3 supporting stats */}
           <div className="grid grid-cols-3 gap-3">
@@ -437,6 +443,125 @@ function shortScheme(s: string): string {
     .replace(/\([^)]+\)/g, "")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function StrategyChooser({
+  pileUp,
+  payNow,
+  selected,
+  onSelect,
+  courseYears,
+  graceMonths,
+}: {
+  pileUp: ReturnType<typeof computeLoan>;
+  payNow: ReturnType<typeof computeLoan>;
+  selected: "pile" | "pay";
+  onSelect: (v: "pile" | "pay") => void;
+  courseYears: number;
+  graceMonths: number;
+}) {
+  const savings = pileUp.totalPaid - payNow.totalPaid;
+  const monthlyInterestDuringStudy =
+    payNow.moratoriumInterest / Math.max(1, payNow.moratoriumMonths);
+
+  return (
+    <div className="border border-line bg-white/60 rounded-2xl p-4 sm:p-5">
+      <div className="flex items-baseline justify-between mb-3">
+        <h3 className="text-[10px] uppercase tracking-[0.2em] text-muted">
+          while you're studying
+        </h3>
+        {savings > 0 && (
+          <span className="text-[10px] uppercase tracking-[0.16em] text-accent">
+            pick right · save {fmtINR(savings)}
+          </span>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <StrategyCard
+          active={selected === "pile"}
+          onClick={() => onSelect("pile")}
+          title="Pay nothing"
+          subtitle={`for ${courseYears} yrs + ${graceMonths} mo`}
+          headline="₹0 / month while studying"
+          headlineTint="muted"
+          totalLabel="total you'll repay"
+          totalValue={fmtINR(pileUp.totalPaid)}
+          note="Interest piles up and gets added to what you owe."
+        />
+        <StrategyCard
+          active={selected === "pay"}
+          onClick={() => onSelect("pay")}
+          title="Pay just the interest"
+          subtitle="from day 1, every month"
+          headline={`~${fmtINRPrecise(monthlyInterestDuringStudy)} / month while studying`}
+          headlineTint="accent"
+          totalLabel="total you'll repay"
+          totalValue={fmtINR(payNow.totalPaid)}
+          badge={savings > 0 ? `saves ${fmtINR(savings)}` : undefined}
+          note="Principal stays flat. EMI later is exactly what you borrowed × rate."
+        />
+      </div>
+    </div>
+  );
+}
+
+function StrategyCard({
+  active,
+  onClick,
+  title,
+  subtitle,
+  headline,
+  headlineTint,
+  totalLabel,
+  totalValue,
+  badge,
+  note,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  subtitle: string;
+  headline: string;
+  headlineTint: "accent" | "muted";
+  totalLabel: string;
+  totalValue: string;
+  badge?: string;
+  note: string;
+}) {
+  const headlineColor = headlineTint === "accent" ? "text-accent" : "text-muted";
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative text-left rounded-xl p-4 border-2 transition-all ${
+        active
+          ? "border-accent bg-accent/[0.06]"
+          : "border-line bg-paper hover:border-muted/40"
+      }`}
+    >
+      {badge && (
+        <span className="absolute -top-2 right-3 text-[9px] uppercase tracking-widest bg-accent text-white px-2 py-0.5 rounded-full">
+          {badge}
+        </span>
+      )}
+      <div className="flex items-baseline gap-2 mb-1">
+        <span
+          className={`inline-block w-3 h-3 rounded-full border-2 shrink-0 ${
+            active ? "border-accent bg-accent" : "border-muted/40"
+          }`}
+        />
+        <span className="font-display text-base sm:text-lg">{title}</span>
+      </div>
+      <div className="text-[11px] text-muted ml-5">{subtitle}</div>
+      <div className={`mt-3 ml-5 font-mono text-sm ${headlineColor}`}>{headline}</div>
+      <div className="mt-3 ml-5 pt-3 border-t border-line">
+        <div className="text-[10px] uppercase tracking-[0.16em] text-muted">{totalLabel}</div>
+        <div className="font-display text-xl mt-0.5">{totalValue}</div>
+      </div>
+      <div className="text-[11px] text-muted mt-2 ml-5 leading-snug">{note}</div>
+    </button>
+  );
 }
 
 function Schedule({
