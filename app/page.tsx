@@ -19,8 +19,6 @@ export default function CalculatorPage() {
   const [taxSlab, setTaxSlab] = useState(30);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
 
-  // When loanAmount > fees, gently clamp the loanAmount to fees on next fee change
-  // Conversely if fees increases, bump loanAmount to match
   const onFeesChange = (next: number) => {
     setFees(next);
     if (loanAmount > next || loanAmount === fees) setLoanAmount(next);
@@ -59,7 +57,6 @@ export default function CalculatorPage() {
     taxSlab,
   ]);
 
-  // Compare same loan across all banks at their mid-rate (with the user's other settings)
   const comparison = useMemo(() => {
     return BANKS.map((b) => ({
       bank: b,
@@ -68,173 +65,179 @@ export default function CalculatorPage() {
   }, [loanAmount, courseYears, graceMonths, repaymentYears, payInterestDuringMoratorium, taxSlab]);
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-      <Hero />
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+      {/* ── Hero (compact) ─────────────────────────────────────────────── */}
+      <section className="space-y-2 max-w-2xl">
+        <h1 className="font-display text-3xl sm:text-5xl leading-[1.05] tracking-tight">
+          Your fees, your <em className="text-accent2">real</em> EMI.
+        </h1>
+        <p className="text-muted text-sm sm:text-base">
+          Punch in the numbers below. The chart updates instantly.
+        </p>
+      </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mt-10">
-        {/* ── Input form ───────────────────────────────────────────────── */}
-        <section className="lg:col-span-2 space-y-5 bg-white/60 border border-line rounded-2xl p-5 sm:p-6 no-print">
-          <h2 className="font-display text-xl">your situation</h2>
-
-          <Field label="Total course fees (₹)" hint="Tuition + hostel + materials over the whole course.">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 mt-8">
+        {/* ── Inputs ─────────────────────────────────────────────────── */}
+        <section className="lg:col-span-2 space-y-4 bg-white/60 border border-line rounded-2xl p-5 no-print">
+          <Field label="Total course fees">
             <RupeeInput value={fees} onChange={onFeesChange} />
           </Field>
 
-          <Field label="Loan amount you need (₹)" hint="Defaults to fees. Reduce if you have savings or a scholarship.">
+          <Field label="Loan amount">
             <RupeeInput value={loanAmount} onChange={setLoanAmount} max={fees} />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Course length">
+            <Field label="Course">
               <select
                 value={courseYears}
                 onChange={(e) => setCourseYears(Number(e.target.value))}
                 className="w-full bg-paper border border-line rounded-lg px-3 py-2 text-sm"
               >
                 {[1, 2, 3, 4, 5, 6].map((y) => (
-                  <option key={y} value={y}>{y} year{y > 1 ? "s" : ""}</option>
+                  <option key={y} value={y}>{y} yr</option>
                 ))}
               </select>
             </Field>
-            <Field label="Grace period">
+            <Field label="Grace after">
               <select
                 value={graceMonths}
                 onChange={(e) => setGraceMonths(Number(e.target.value))}
                 className="w-full bg-paper border border-line rounded-lg px-3 py-2 text-sm"
               >
                 {[0, 6, 12].map((m) => (
-                  <option key={m} value={m}>{m === 0 ? "none" : `${m} months`}</option>
+                  <option key={m} value={m}>{m === 0 ? "none" : `${m} mo`}</option>
                 ))}
               </select>
             </Field>
           </div>
 
-          <Field label="Repayment tenure" hint="How many years to pay back, after the moratorium ends.">
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={3}
-                max={15}
-                step={1}
-                value={repaymentYears}
-                onChange={(e) => setRepaymentYears(Number(e.target.value))}
-                className="flex-1 accent-accent"
-              />
-              <span className="font-mono text-sm w-14 text-right">{repaymentYears} yr</span>
-            </div>
+          <Field label={`Repayment: ${repaymentYears} years`}>
+            <input
+              type="range"
+              min={3}
+              max={15}
+              step={1}
+              value={repaymentYears}
+              onChange={(e) => setRepaymentYears(Number(e.target.value))}
+              className="w-full accent-accent"
+            />
           </Field>
 
-          <Field label="Bank / interest rate">
+          <Field label={`Interest rate: ${rate.toFixed(2)}%`}>
             <select
               value={bankId}
               onChange={(e) => onBankSelect(e.target.value)}
               className="w-full bg-paper border border-line rounded-lg px-3 py-2 text-sm mb-2"
             >
-              <option value="custom">— set rate manually —</option>
+              <option value="custom">— set manually —</option>
               {BANKS.map((b) => (
                 <option key={b.id} value={b.id}>
-                  {b.name} · {b.scheme} ({b.rateMid}%)
+                  {b.name} ({b.rateMid}%)
                 </option>
               ))}
             </select>
-            <div className="flex items-center gap-3">
-              <input
-                type="range"
-                min={6}
-                max={16}
-                step={0.05}
-                value={rate}
-                onChange={(e) => onRateChange(Number(e.target.value))}
-                className="flex-1 accent-accent"
-              />
-              <span className="font-mono text-sm w-16 text-right">{rate.toFixed(2)}%</span>
-            </div>
+            <input
+              type="range"
+              min={6}
+              max={16}
+              step={0.05}
+              value={rate}
+              onChange={(e) => onRateChange(Number(e.target.value))}
+              className="w-full accent-accent"
+            />
           </Field>
 
-          <label className="flex items-start gap-3 cursor-pointer">
+          <label className="flex items-start gap-2.5 cursor-pointer pt-1">
             <input
               type="checkbox"
               checked={payInterestDuringMoratorium}
               onChange={(e) => setPayInterestDuringMoratorium(e.target.checked)}
-              className="mt-1 accent-accent"
+              className="mt-1 accent-accent shrink-0"
             />
-            <span className="text-sm">
-              <span className="font-medium">Pay interest during the moratorium</span>
-              <span className="block text-xs text-muted mt-0.5">
-                If you (or your parents) can pay just the monthly interest while you study,
-                your principal doesn't balloon — saves a lot in the long run.
-              </span>
+            <span className="text-xs leading-snug">
+              <span className="font-medium text-sm">Pay interest while studying</span>
+              <br />
+              <span className="text-muted">Saves a lot. See the difference live.</span>
             </span>
           </label>
 
-          <Field label="Your future tax bracket (for the 80E benefit)" hint="Interest on education loans is fully tax-deductible for 8 years.">
+          <Field label="Tax slab (for 80E)">
             <select
               value={taxSlab}
               onChange={(e) => setTaxSlab(Number(e.target.value))}
               className="w-full bg-paper border border-line rounded-lg px-3 py-2 text-sm"
             >
-              <option value={0}>none / not earning yet</option>
-              <option value={5}>5% slab (₹3–7L income)</option>
-              <option value={10}>10% slab (₹7–10L)</option>
-              <option value={15}>15% slab (₹10–12L)</option>
-              <option value={20}>20% slab (₹12–15L)</option>
-              <option value={30}>30% slab (above ₹15L)</option>
+              <option value={0}>none</option>
+              <option value={5}>5%</option>
+              <option value={10}>10%</option>
+              <option value={15}>15%</option>
+              <option value={20}>20%</option>
+              <option value={30}>30%</option>
             </select>
           </Field>
         </section>
 
-        {/* ── Results ───────────────────────────────────────────────────── */}
+        {/* ── Results ────────────────────────────────────────────────── */}
         <section className="lg:col-span-3 space-y-5">
-          <div className="grid grid-cols-2 gap-3">
-            <Stat label="monthly EMI" value={fmtINRPrecise(result.emi)} accent />
-            <Stat label="total you'll repay" value={fmtINR(result.totalPaid)} />
-            <Stat label="total interest" value={fmtINR(result.totalInterest)} accent2 />
-            <Stat
-              label="effective cost"
-              value={`${result.effectiveCostPct.toFixed(1)}%`}
-              hint="extra over what you borrow"
+          {/* Big EMI */}
+          <div className="border border-accent/40 bg-accent/[0.04] rounded-2xl p-5 sm:p-6">
+            <div className="text-[10px] uppercase tracking-[0.22em] text-muted">your monthly EMI</div>
+            <div className="font-display text-5xl sm:text-6xl text-accent leading-none mt-1">
+              {fmtINRPrecise(result.emi)}
+            </div>
+            <div className="text-xs text-muted mt-2">
+              for {repaymentYears} years · starts after {fmtMonths(result.moratoriumMonths)}
+            </div>
+          </div>
+
+          {/* 3 supporting stats */}
+          <div className="grid grid-cols-3 gap-3">
+            <MiniStat label="you'll repay" value={fmtINR(result.totalPaid)} />
+            <MiniStat label="of that, interest" value={fmtINR(result.totalInterest)} tint="accent2" />
+            <MiniStat
+              label="extra over loan"
+              value={`${result.effectiveCostPct.toFixed(0)}%`}
+              tint="muted"
             />
           </div>
 
-          <Narrative
-            principal={loanAmount}
-            rate={rate}
-            courseYears={courseYears}
-            graceMonths={graceMonths}
-            repaymentYears={repaymentYears}
-            emi={result.emi}
-            totalInterest={result.totalInterest}
-            totalPaid={result.totalPaid}
-            moratoriumInterest={result.moratoriumInterest}
-            payInterestDuringMoratorium={payInterestDuringMoratorium}
-            principalAtRepaymentStart={result.principalAtRepaymentStart}
-            taxSavings={result.taxSavings80E}
-            taxSlab={taxSlab}
-          />
-
-          <Panel title="year-by-year breakdown" subtitle="green = principal paid · orange = interest paid · grey = interest accruing during your course (no EMI yet)">
+          {/* Yearly chart */}
+          <Panel title="year-by-year">
+            <Legend />
             <YearlyChart yearly={result.yearly} />
           </Panel>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            <Panel title="where your money goes">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Panel title="where the money goes">
               <PrincipalVsInterest principal={loanAmount} interest={result.totalInterest} />
             </Panel>
 
-            <Panel title="the maths, briefly">
-              <ul className="text-sm space-y-2.5">
-                <Row label="Principal you borrow" value={fmtINR(loanAmount)} />
-                <Row label="Moratorium period" value={fmtMonths(result.moratoriumMonths)} />
-                <Row
-                  label={payInterestDuringMoratorium ? "Interest paid while studying" : "Interest that piles up while studying"}
-                  value={fmtINR(result.moratoriumInterest)}
+            <Panel title="the key numbers">
+              <dl className="text-sm divide-y divide-line">
+                <DL term="Loan" desc={fmtINR(loanAmount)} />
+                <DL term="Moratorium" desc={fmtMonths(result.moratoriumMonths)} />
+                <DL
+                  term={payInterestDuringMoratorium ? "Paid while studying" : "Accrues while studying"}
+                  desc={fmtINR(result.moratoriumInterest)}
+                  tint={payInterestDuringMoratorium ? undefined : "accent2"}
                 />
                 {!payInterestDuringMoratorium && (
-                  <Row label="Principal when EMI kicks in" value={fmtINR(result.principalAtRepaymentStart)} sub />
+                  <DL
+                    term="Owed when EMI starts"
+                    desc={fmtINR(result.principalAtRepaymentStart)}
+                    tint="accent2"
+                  />
                 )}
-                <Row label="Repayment tenure" value={`${repaymentYears} years`} />
-                <Row label="Monthly EMI" value={fmtINRPrecise(result.emi)} accent />
-              </ul>
+                <DL term="EMI tenure" desc={`${repaymentYears} years`} />
+                {taxSlab > 0 && (
+                  <DL
+                    term="80E tax saved (est.)"
+                    desc={`− ${fmtINR(result.taxSavings80E)}`}
+                    tint="accent"
+                  />
+                )}
+              </dl>
             </Panel>
           </div>
 
@@ -250,9 +253,12 @@ export default function CalculatorPage() {
             onToggle={() => setShowFullSchedule((v) => !v)}
           />
 
-          <div className="text-center pt-4 no-print">
-            <Link href="/learn" className="inline-block text-sm text-accent underline underline-offset-4 hover:text-accent2">
-              don't get half of this? → read the plain-English explainer
+          <div className="text-center pt-3 no-print">
+            <Link
+              href="/learn"
+              className="inline-block text-sm text-accent underline underline-offset-4 hover:text-accent2"
+            >
+              new to all this? → 2-minute crash course
             </Link>
           </div>
         </section>
@@ -261,41 +267,15 @@ export default function CalculatorPage() {
   );
 }
 
-// ── Sub-components ──────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────
 
-function Hero() {
-  return (
-    <section className="space-y-3 max-w-3xl">
-      <div className="text-xs uppercase tracking-[0.25em] text-accent">
-        education loan, in plain english
-      </div>
-      <h1 className="font-display text-4xl sm:text-5xl leading-[1.05] tracking-tight">
-        Punch in your fees. See <em className="text-accent2">exactly</em> what you'll pay back.
-      </h1>
-      <p className="text-muted text-base sm:text-lg leading-relaxed">
-        Most loan calculators give you one number and call it a day. This one shows you the whole
-        picture — moratorium interest, year-by-year breakdown, what the same loan would cost at every
-        major Indian bank — so you (and the parents looking over your shoulder) can actually
-        understand the numbers.
-      </p>
-    </section>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-sm font-medium">{label}</label>
+      <label className="block text-xs uppercase tracking-[0.14em] text-muted font-medium">
+        {label}
+      </label>
       {children}
-      {hint && <p className="text-xs text-muted leading-snug">{hint}</p>}
     </div>
   );
 }
@@ -324,7 +304,7 @@ function RupeeInput({
         className="w-full bg-paper border border-line rounded-lg pl-7 pr-3 py-2 text-sm font-mono"
       />
       {value > 0 && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted font-mono">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted font-mono">
           {fmtINR(value)}
         </span>
       )}
@@ -332,132 +312,61 @@ function RupeeInput({
   );
 }
 
-function Stat({
+function MiniStat({
   label,
   value,
-  hint,
-  accent = false,
-  accent2 = false,
+  tint,
 }: {
   label: string;
   value: string;
-  hint?: string;
-  accent?: boolean;
-  accent2?: boolean;
+  tint?: "accent" | "accent2" | "muted";
 }) {
-  const color = accent ? "text-accent" : accent2 ? "text-accent2" : "text-ink";
+  const color =
+    tint === "accent2" ? "text-accent2" : tint === "muted" ? "text-muted" : "text-ink";
   return (
-    <div className="border border-line bg-white/60 rounded-xl p-4 sm:p-5">
-      <div className="text-[10px] uppercase tracking-[0.18em] text-muted">{label}</div>
-      <div className={`mt-1.5 font-display text-2xl sm:text-3xl ${color}`}>{value}</div>
-      {hint && <div className="text-[11px] text-muted mt-1">{hint}</div>}
+    <div className="border border-line bg-white/60 rounded-xl px-3 py-3">
+      <div className="text-[9px] uppercase tracking-[0.16em] text-muted leading-tight">
+        {label}
+      </div>
+      <div className={`mt-1 font-display text-xl sm:text-2xl ${color}`}>{value}</div>
     </div>
   );
 }
 
-function Panel({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border border-line bg-white/60 rounded-xl p-4 sm:p-5">
-      <h3 className="font-display text-lg">{title}</h3>
-      {subtitle && <p className="text-xs text-muted mt-1 mb-3">{subtitle}</p>}
-      {!subtitle && <div className="mb-3" />}
+      <h3 className="text-[10px] uppercase tracking-[0.2em] text-muted mb-3">{title}</h3>
       {children}
     </div>
   );
 }
 
-function Row({
-  label,
-  value,
-  accent = false,
-  sub = false,
-}: {
-  label: string;
-  value: string;
-  accent?: boolean;
-  sub?: boolean;
-}) {
+function DL({ term, desc, tint }: { term: string; desc: string; tint?: "accent" | "accent2" }) {
+  const color = tint === "accent" ? "text-accent" : tint === "accent2" ? "text-accent2" : "text-ink";
   return (
-    <li className={`flex items-baseline justify-between ${sub ? "text-muted" : ""}`}>
-      <span>{label}</span>
-      <span className={`font-mono ${accent ? "text-accent font-semibold" : ""}`}>{value}</span>
-    </li>
+    <div className="flex items-baseline justify-between py-2 first:pt-0 last:pb-0">
+      <dt className="text-muted">{term}</dt>
+      <dd className={`font-mono ${color}`}>{desc}</dd>
+    </div>
   );
 }
 
-function Narrative(props: {
-  principal: number;
-  rate: number;
-  courseYears: number;
-  graceMonths: number;
-  repaymentYears: number;
-  emi: number;
-  totalInterest: number;
-  totalPaid: number;
-  moratoriumInterest: number;
-  payInterestDuringMoratorium: boolean;
-  principalAtRepaymentStart: number;
-  taxSavings: number;
-  taxSlab: number;
-}) {
-  const {
-    principal,
-    rate,
-    courseYears,
-    graceMonths,
-    repaymentYears,
-    emi,
-    totalInterest,
-    totalPaid,
-    moratoriumInterest,
-    payInterestDuringMoratorium,
-    principalAtRepaymentStart,
-    taxSavings,
-    taxSlab,
-  } = props;
-
+function Legend() {
   return (
-    <div className="border border-accent/30 bg-accent/[0.04] rounded-xl p-5">
-      <h3 className="font-display text-lg mb-2">here's how this plays out</h3>
-      <p className="text-sm leading-relaxed">
-        You borrow <strong>{fmtINR(principal)}</strong> at <strong>{rate.toFixed(2)}%</strong> per year.
-        While you study ({courseYears} year{courseYears > 1 ? "s" : ""}) plus the {graceMonths}-month grace
-        period after,{" "}
-        {payInterestDuringMoratorium ? (
-          <>
-            you pay only the monthly interest — about <strong>{fmtINR(moratoriumInterest)}</strong> over
-            that whole stretch — so your principal stays flat.
-          </>
-        ) : (
-          <>
-            no EMI is due — but <strong>{fmtINR(moratoriumInterest)}</strong> of interest quietly accrues
-            and gets added to what you owe, so when EMI starts you're actually paying off{" "}
-            <strong>{fmtINR(principalAtRepaymentStart)}</strong>.
-          </>
-        )}{" "}
-        From then on, your EMI is <strong>{fmtINRPrecise(emi)}</strong> a month for {repaymentYears} years.
-      </p>
-      <p className="text-sm leading-relaxed mt-3">
-        Total: you'll pay <strong>{fmtINR(totalPaid)}</strong> — of which <strong>{fmtINR(totalInterest)}</strong>{" "}
-        is interest. That's roughly <strong>{((totalInterest / principal) * 100).toFixed(0)}%</strong> more
-        than what you borrowed.
-        {taxSlab > 0 && (
-          <>
-            {" "}Under <strong>Section 80E</strong>, the interest you pay during the first 8 years is fully
-            tax-deductible — at your {taxSlab}% slab that's about <strong>{fmtINR(taxSavings)}</strong>{" "}
-            saved on income tax, bringing your real cost down to ~<strong>{fmtINR(totalPaid - taxSavings)}</strong>.
-          </>
-        )}
-      </p>
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-muted mb-2">
+      <LegendDot color="#1E5F3F" label="principal paid" />
+      <LegendDot color="#C46A4B" label="interest paid" />
+      <LegendDot color="#E6DFD0" label="accruing (no EMI yet)" />
     </div>
+  );
+}
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className="w-2.5 h-2.5 rounded-sm" style={{ background: color }} />
+      {label}
+    </span>
   );
 }
 
@@ -474,16 +383,15 @@ function BankComparison({
   const cheapest = sorted[0]?.result.totalPaid ?? 0;
 
   return (
-    <Panel title="how popular banks compare" subtitle="Click a row to recalculate with that bank's mid-band rate. Rates are 2026 estimates; actual rate depends on your institute, profile, and the day you apply.">
+    <Panel title="popular banks · sorted cheapest first · tap to use">
       <div className="overflow-x-auto -mx-1 scrollbar-thin">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[10px] uppercase tracking-[0.18em] text-muted text-left">
-              <th className="px-2 py-2 font-normal">bank · scheme</th>
+            <tr className="text-[10px] uppercase tracking-[0.16em] text-muted text-left">
+              <th className="px-2 py-2 font-normal">bank</th>
               <th className="px-2 py-2 font-normal text-right">rate</th>
               <th className="px-2 py-2 font-normal text-right">EMI</th>
-              <th className="px-2 py-2 font-normal text-right">total interest</th>
-              <th className="px-2 py-2 font-normal text-right">extra cost</th>
+              <th className="px-2 py-2 font-normal text-right">+vs cheapest</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -499,23 +407,16 @@ function BankComparison({
                   }`}
                 >
                   <td className="px-2 py-2.5">
-                    <div className="font-medium">{bank.name}</div>
-                    <div className="text-[11px] text-muted">{bank.scheme}</div>
+                    <div className="font-medium text-sm leading-tight">{bank.name}</div>
+                    <div className="text-[10px] text-muted leading-tight">{shortScheme(bank.scheme)}</div>
                   </td>
-                  <td className="px-2 py-2.5 text-right font-mono">
-                    {bank.rateMin}–{bank.rateMax}%
-                  </td>
-                  <td className="px-2 py-2.5 text-right font-mono">
-                    {fmtINRPrecise(result.emi)}
-                  </td>
-                  <td className="px-2 py-2.5 text-right font-mono text-accent2">
-                    {fmtINR(result.totalInterest)}
-                  </td>
+                  <td className="px-2 py-2.5 text-right font-mono text-xs">{bank.rateMid}%</td>
+                  <td className="px-2 py-2.5 text-right font-mono">{fmtINRPrecise(result.emi)}</td>
                   <td className="px-2 py-2.5 text-right font-mono text-xs">
                     {extra === 0 ? (
                       <span className="text-accent">cheapest</span>
                     ) : (
-                      `+${fmtINR(extra)}`
+                      <span className="text-accent2">+{fmtINR(extra)}</span>
                     )}
                   </td>
                 </tr>
@@ -526,6 +427,16 @@ function BankComparison({
       </div>
     </Panel>
   );
+}
+
+function shortScheme(s: string): string {
+  // trim long scheme names for the compact table
+  return s
+    .replace(/Education Loan/i, "")
+    .replace(/Loan/i, "")
+    .replace(/\([^)]+\)/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function Schedule({
@@ -539,44 +450,38 @@ function Schedule({
 }) {
   const visible = showFull ? yearly : yearly.slice(0, 5);
   return (
-    <Panel title="repayment schedule, year by year">
+    <Panel title="year-by-year detail">
       <div className="overflow-x-auto -mx-1 scrollbar-thin">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-[10px] uppercase tracking-[0.18em] text-muted text-left">
-              <th className="px-2 py-2 font-normal">year</th>
+            <tr className="text-[10px] uppercase tracking-[0.16em] text-muted text-left">
+              <th className="px-2 py-2 font-normal">yr</th>
               <th className="px-2 py-2 font-normal">phase</th>
-              <th className="px-2 py-2 font-normal text-right">EMI paid</th>
+              <th className="px-2 py-2 font-normal text-right">paid</th>
               <th className="px-2 py-2 font-normal text-right">principal</th>
               <th className="px-2 py-2 font-normal text-right">interest</th>
-              <th className="px-2 py-2 font-normal text-right">outstanding</th>
+              <th className="px-2 py-2 font-normal text-right">left</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {visible.map((y) => (
               <tr key={y.year}>
-                <td className="px-2 py-2 font-mono">Y{y.year}</td>
+                <td className="px-2 py-2 font-mono text-xs">Y{y.year}</td>
                 <td className="px-2 py-2">
                   {y.phase === "moratorium" ? (
-                    <span className="inline-block text-[10px] uppercase tracking-widest border border-line rounded px-1.5 py-0.5 text-muted">
-                      studying
-                    </span>
+                    <span className="text-[10px] uppercase tracking-widest text-muted">study</span>
                   ) : (
-                    <span className="inline-block text-[10px] uppercase tracking-widest border border-accent/30 text-accent rounded px-1.5 py-0.5">
-                      repaying
-                    </span>
+                    <span className="text-[10px] uppercase tracking-widest text-accent">pay</span>
                   )}
                 </td>
-                <td className="px-2 py-2 text-right font-mono">{fmtINR(y.emiThisYear)}</td>
-                <td className="px-2 py-2 text-right font-mono text-accent">{fmtINR(y.principalPaid)}</td>
-                <td className="px-2 py-2 text-right font-mono text-accent2">
-                  {y.phase === "moratorium" && y.interestAccrued > 0 ? (
-                    <span title="accruing — not yet paid">+{fmtINR(y.interestAccrued)}</span>
-                  ) : (
-                    fmtINR(y.interestPaid)
-                  )}
+                <td className="px-2 py-2 text-right font-mono text-xs">{fmtINR(y.emiThisYear)}</td>
+                <td className="px-2 py-2 text-right font-mono text-xs text-accent">{fmtINR(y.principalPaid)}</td>
+                <td className="px-2 py-2 text-right font-mono text-xs text-accent2">
+                  {y.phase === "moratorium" && y.interestAccrued > 0
+                    ? `+${fmtINR(y.interestAccrued)}`
+                    : fmtINR(y.interestPaid)}
                 </td>
-                <td className="px-2 py-2 text-right font-mono text-muted">{fmtINR(y.outstanding)}</td>
+                <td className="px-2 py-2 text-right font-mono text-xs text-muted">{fmtINR(y.outstanding)}</td>
               </tr>
             ))}
           </tbody>
@@ -585,9 +490,9 @@ function Schedule({
       {yearly.length > 5 && (
         <button
           onClick={onToggle}
-          className="mt-4 text-xs text-muted underline underline-offset-4 hover:text-ink no-print"
+          className="mt-3 text-xs text-muted underline underline-offset-4 hover:text-ink no-print"
         >
-          {showFull ? "show only first 5 years" : `show all ${yearly.length} years`}
+          {showFull ? "← collapse" : `show all ${yearly.length} years →`}
         </button>
       )}
     </Panel>
