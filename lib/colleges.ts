@@ -1,21 +1,20 @@
 // Curated college DB for the loan calculator's /colleges page.
 //
 // Every entry was researched by parallel WebFetch agents that verified the
-// fee on the institution's official .ac.in / .edu.in page (or, where that
-// failed to render, a well-known aggregator — those entries are noted).
+// fee on the institution's official .ac.in / .edu.in page (or, where the
+// official site was down / 404 / SSL-broken, a well-known aggregator —
+// Collegedunia / Shiksha / Careers360 / CollegeDekho — noted per entry).
 //
 // Two fee fields, deliberately:
 //   - `feePeriod` + `feePeriodAmountInr`: the amount as actually published
 //     on the official site (per-semester / per-year / full-course)
 //   - `approxTotalFeesInr`: that amount normalised to the full course total
 //
-// This split exists because private universities publish fees differently
-// (LPU ₹1.4L/sem, KIIT ₹4.6L/yr, IITs ~₹10L total). Always showing both
-// keeps users from being shocked by a "per-sem" headline they took for the
-// whole course.
-//
 // `admissionMode` is the route for getting in. Critical for students without
-// a JEE Main rank — filter to {direct | private_exam | jee_main_or_direct}.
+// a JEE Main rank — filter to `direct` | `private_exam` | `jee_main_or_direct`
+// (and many `state_exam` colleges like KCET/COMEDK/MHT-CET/TNEA/WBJEE
+// genuinely don't need JEE Main).
+//
 // `minBoardPct` is the 10+2 aggregate cutoff (some private exams have stricter
 // PCM-only cutoffs — noted per entry).
 
@@ -33,16 +32,16 @@ export type CourseFocus =
   | "commerce";
 
 export type AdmissionMode =
-  | "jee_advanced"   // requires JEE Advanced (IITs)
-  | "jee_main"       // requires JEE Main rank (NITs, IIITs)
-  | "state_exam"     // state CET (MHT-CET, TNEA, KCET, UPSEE/AKTU, etc.)
-  | "private_exam"   // university's own entrance (SRMJEEE, VITEEE, LPUNEST, BITSAT, KIITEE)
-  | "direct"         // direct admission on 10+2 marks
-  | "jee_main_or_direct"  // accepts either
-  | "cat"            // for IIM/MBA entries
-  | "neet"           // for medical
-  | "clat"           // for law
-  | "cuet"           // for central-university UG
+  | "jee_advanced"
+  | "jee_main"
+  | "state_exam"
+  | "private_exam"
+  | "direct"
+  | "jee_main_or_direct"
+  | "cat"
+  | "neet"
+  | "clat"
+  | "cuet"
   | "other";
 
 export type FeePeriod = "per_semester" | "per_year" | "full_course";
@@ -55,23 +54,15 @@ export interface College {
   cityTier: CityTier;
   type: CollegeType;
   courseFocus: CourseFocus;
-  /** What program the fee is for, e.g. "B.Tech CSE", "PGP", "MBBS" */
   program: string;
-  /** Period as published on the official site */
   feePeriod: FeePeriod;
-  /** Amount for that period */
   feePeriodAmountInr: number;
-  /** Total course fees (period × multiplier), rounded sensibly */
   approxTotalFeesInr: number;
   durationYears: number;
-  /** Primary entrance route */
   admissionMode: AdmissionMode;
-  /** Human-readable exam string (for display) */
   mainEntranceExam: string;
-  /** Minimum 10+2 aggregate % required (best-effort) */
   minBoardPct: number;
   officialUrl: string;
-  /** Page where the fee was verified */
   feeSourceUrl: string;
   hostelPerYearInr?: number;
   note: string;
@@ -79,716 +70,228 @@ export interface College {
 
 export const COLLEGES: College[] = [
   // ════════════════════════════════════════════════════════════════════════
-  //  ENGINEERING — Govt central (IITs, NITs, IIITs, IISc B.Tech, IIT BHU…)
-  //  These require JEE Main / JEE Advanced.
+  //  GOVT CENTRAL — IITs, NITs, IIITs, IISc (need JEE Advanced or JEE Main)
   // ════════════════════════════════════════════════════════════════════════
-  {
-    id: "iit-bombay", name: "IIT Bombay", city: "Mumbai", state: "Maharashtra",
-    cityTier: 1, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1100000,
-    approxTotalFeesInr: 1100000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitb.ac.in/",
-    feeSourceUrl: "https://acad.iitb.ac.in/admissions/fees-structure",
-    hostelPerYearInr: 26000,
-    note: "Top-ranked IIT. ~₹2.15L/yr incl. tuition + hostel + mess. SC/ST/PwD get major waivers.",
-  },
-  {
-    id: "iit-delhi", name: "IIT Delhi", city: "New Delhi", state: "Delhi",
-    cityTier: 1, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1050000,
-    approxTotalFeesInr: 1050000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://home.iitd.ac.in/",
-    feeSourceUrl: "https://home.iitd.ac.in/uploads/ug/25-26/Fee%20Structure_2025-26_UG%20Entry%20Students.pdf",
-    hostelPerYearInr: 80000,
-    note: "~₹8.6L tuition for 4 yrs general category; full waiver for family income below ₹1L.",
-  },
-  {
-    id: "iit-madras", name: "IIT Madras", city: "Chennai", state: "Tamil Nadu",
-    cityTier: 1, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 950000,
-    approxTotalFeesInr: 950000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitm.ac.in/",
-    feeSourceUrl: "https://fees.iitm.ac.in/assets/circular/institute_fee_circular_jul_nov_2025.pdf",
-    hostelPerYearInr: 60000,
-    note: "NIRF #1 institute. ~₹1.10L/sem general (tuition + hostel).",
-  },
-  {
-    id: "iit-hyderabad", name: "IIT Hyderabad", city: "Hyderabad", state: "Telangana",
-    cityTier: 1, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1200000,
-    approxTotalFeesInr: 1200000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iith.ac.in/",
-    feeSourceUrl: "https://www.iith.ac.in/admissions/",
-    hostelPerYearInr: 70000,
-    note: "Strong CSE/AI placements. ~₹1.67L/sem general (tuition + hostel).",
-  },
-  {
-    id: "iit-indore", name: "IIT Indore", city: "Indore", state: "Madhya Pradesh",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1100000,
-    approxTotalFeesInr: 1100000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iiti.ac.in/",
-    feeSourceUrl: "https://academic.iiti.ac.in/Admission/2025/New/2025%20B.Tech.%20and%20B.Des.%20Batch_Four%20Year%20Fee%20Structure_Tentative.pdf",
-    hostelPerYearInr: 40000,
-    note: "Generous fee remission for family income <₹5L; strong placements in core + CS.",
-  },
-  {
-    id: "iit-bhubaneswar", name: "IIT Bhubaneswar", city: "Bhubaneswar", state: "Odisha",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 850000,
-    approxTotalFeesInr: 850000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitbbs.ac.in/",
-    feeSourceUrl: "https://www.iitbbs.ac.in/index.php/home/academics/fee-structure/",
-    hostelPerYearInr: 55000,
-    note: "Tuition ₹2L/yr (~₹8L total); SC/ST/PwD waivers; growing core engineering rep.",
-  },
-  {
-    id: "iit-bhu", name: "IIT (BHU) Varanasi", city: "Varanasi", state: "Uttar Pradesh",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1050000,
-    approxTotalFeesInr: 1050000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://iitbhu.ac.in/",
-    feeSourceUrl: "https://iitbhu.ac.in/contents/institute/main/docs/acad/fee_structure.pdf",
-    hostelPerYearInr: 55000,
-    note: "Full IIT brand with BHU heritage; ~₹10.4L total; cheap living in Varanasi.",
-  },
-  {
-    id: "iit-roorkee", name: "IIT Roorkee", city: "Roorkee", state: "Uttarakhand",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 900000,
-    approxTotalFeesInr: 900000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitr.ac.in/",
-    feeSourceUrl: "https://iitr.ac.in/Academics/static/Institute_Fee/2025-26/PG.pdf",
-    hostelPerYearInr: 65000,
-    note: "Top-5 IIT in a small Uttarakhand town; full waiver below ₹1L income, 2/3 below ₹5L.",
-  },
-  {
-    id: "iit-kgp", name: "IIT Kharagpur", city: "Kharagpur", state: "West Bengal",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000,
-    approxTotalFeesInr: 1000000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitkgp.ac.in/",
-    feeSourceUrl: "https://www.iitkgp.ac.in/fee-structure",
-    hostelPerYearInr: 66000,
-    note: "India's first IIT; largest campus; cheap COL in railway-town setting.",
-  },
-  {
-    id: "iit-mandi", name: "IIT Mandi", city: "Mandi", state: "Himachal Pradesh",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 850000,
-    approxTotalFeesInr: 850000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitmandi.ac.in/",
-    feeSourceUrl: "https://www.iitmandi.ac.in/academics",
-    hostelPerYearInr: 30000,
-    note: "Newer IIT in the Himalayas; small batches; MCM scholarships for top-10 per branch.",
-  },
-  {
-    id: "iit-patna", name: "IIT Patna", city: "Patna", state: "Bihar",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000,
-    approxTotalFeesInr: 1000000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitp.ac.in/",
-    feeSourceUrl: "https://www.iitp.ac.in/index.php/students-corner/academic-fees",
-    hostelPerYearInr: 60000,
-    note: "Rising CSE placements; full waiver below ₹1L, 2/3 below ₹5L. Tuition only listed.",
-  },
-  {
-    id: "iit-jodhpur", name: "IIT Jodhpur", city: "Jodhpur", state: "Rajasthan",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000,
-    approxTotalFeesInr: 1000000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitj.ac.in/",
-    feeSourceUrl: "https://www.iitj.ac.in/admission/index.php?id=fee_structure",
-    hostelPerYearInr: 30000,
-    note: "Strong AI/Data Science programs; cheap COL in Jodhpur, modern desert campus.",
-  },
-  {
-    id: "iit-dharwad", name: "IIT Dharwad", city: "Dharwad", state: "Karnataka",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1150000,
-    approxTotalFeesInr: 1150000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75,
-    officialUrl: "https://www.iitdh.ac.in/",
-    feeSourceUrl: "https://www.iitdh.ac.in/student-fees",
-    hostelPerYearInr: 54000,
-    note: "Newest IIT in a Tier-3 Karnataka town; full SC/ST/PwD tuition waiver.",
-  },
-  {
-    id: "iisc-bs", name: "IISc Bangalore (BS Research)", city: "Bangalore", state: "Karnataka",
-    cityTier: 1, type: "govt_central", courseFocus: "engineering",
-    program: "BS (Research)", feePeriod: "full_course", feePeriodAmountInr: 450000,
-    approxTotalFeesInr: 450000, durationYears: 4,
-    admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced / KVPY / NEET", minBoardPct: 75,
-    officialUrl: "https://www.iisc.ac.in/",
-    feeSourceUrl: "https://bs-ug.iisc.ac.in/admissions/fee-structure",
-    hostelPerYearInr: 30000,
-    note: "BS (Research) 4-yr; ~₹1L/yr tuition general, fully waived for SC/ST/PwD. India's top research institute.",
-  },
-  {
-    id: "nit-trichy", name: "NIT Trichy", city: "Tiruchirappalli", state: "Tamil Nadu",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 650000,
-    approxTotalFeesInr: 650000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.nitt.edu/",
-    feeSourceUrl: "https://www.nitt.edu/home/academics/fees_section/",
-    hostelPerYearInr: 40000,
-    note: "Consistently ranked #1 NIT; recruiter favourite for core engineering. Best ROI nationwide.",
-  },
-  {
-    id: "nit-warangal", name: "NIT Warangal", city: "Warangal", state: "Telangana",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 550000,
-    approxTotalFeesInr: 550000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.nitw.ac.in/",
-    feeSourceUrl: "https://www.nitw.ac.in/main/AcademicSection/Tutionfee/",
-    hostelPerYearInr: 60000,
-    note: "Top-3 NIT; strong CSE placements. One of the oldest RECs, cheap COL.",
-  },
-  {
-    id: "nit-rourkela", name: "NIT Rourkela", city: "Rourkela", state: "Odisha",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000,
-    approxTotalFeesInr: 600000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.nitrkl.ac.in/",
-    feeSourceUrl: "https://www.nitrkl.ac.in/docs/Announcement/07082025113535080.pdf",
-    hostelPerYearInr: 30000,
-    note: "Top-tier NIT in a small steel town; strong CSE/Mech placements. Very low COL.",
-  },
-  {
-    id: "nit-surathkal", name: "NIT Karnataka Surathkal (NITK)", city: "Mangaluru", state: "Karnataka",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000,
-    approxTotalFeesInr: 600000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.nitk.ac.in/",
-    feeSourceUrl: "https://www.nitk.ac.in/document/attachments/8447/FEE_STRUCTURE_2025-26_.pdf",
-    hostelPerYearInr: 35000,
-    note: "Beach-side NIT; top-ranked core engineering; ~₹5.7-6L total incl. fees.",
-  },
-  {
-    id: "nit-calicut", name: "NIT Calicut", city: "Kozhikode", state: "Kerala",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 700000,
-    approxTotalFeesInr: 700000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://nitc.ac.in/",
-    feeSourceUrl: "https://nitc.ac.in/imgserver/uploads/attachments/nit-calicut-fee-structure-ug-pg-phd-for-the-ay-2025-26_0ffc1837-ac4a-4159-b530-21687a7a60c1_0.pdf",
-    hostelPerYearInr: 80000,
-    note: "Highly ranked NIT with strong Architecture and CSE; 2/3 tuition waiver below ₹5L income.",
-  },
-  {
-    id: "manit-bhopal", name: "MANIT Bhopal", city: "Bhopal", state: "Madhya Pradesh",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 700000,
-    approxTotalFeesInr: 700000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.manit.ac.in/",
-    feeSourceUrl: "https://cse.manit.ac.in/sites/default/files/addmissionsection/MANIT%20Fee%20details%2025-26_Modified%2009%2010%20%202025%20latest.pdf",
-    hostelPerYearInr: 25000,
-    note: "Top NIT; ~₹5L tuition + hostel/mess; PSU and IT placements.",
-  },
-  {
-    id: "mnit-jaipur", name: "MNIT Jaipur", city: "Jaipur", state: "Rajasthan",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 650000,
-    approxTotalFeesInr: 650000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.mnit.ac.in/",
-    feeSourceUrl: "https://www.mnit.ac.in/cms/uploads/2025/05/FeeUG2025-26.pdf",
-    hostelPerYearInr: 30000,
-    note: "Premier NIT in the Pink City; ~₹6.5L total incl. tuition + hostel.",
-  },
-  {
-    id: "vnit-nagpur", name: "VNIT Nagpur", city: "Nagpur", state: "Maharashtra",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000,
-    approxTotalFeesInr: 600000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://vnit.ac.in/",
-    feeSourceUrl: "https://vnit.ac.in/study-in-india/",
-    hostelPerYearInr: 40000,
-    note: "Total ~₹5.57L for 4 yrs; SC/ST/PwD full tuition waiver; strong core branches.",
-  },
-  {
-    id: "svnit-surat", name: "SVNIT Surat", city: "Surat", state: "Gujarat",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000,
-    approxTotalFeesInr: 600000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.svnit.ac.in/",
-    feeSourceUrl: "https://www.svnit.ac.in/",
-    hostelPerYearInr: 50000,
-    note: "Tuition ₹5L over 4 yrs + ~₹40-55K/yr hostel; income-based fee remission.",
-  },
-  {
-    id: "nit-raipur", name: "NIT Raipur", city: "Raipur", state: "Chhattisgarh",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 750000,
-    approxTotalFeesInr: 750000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.nitrr.ac.in/",
-    feeSourceUrl: "https://www.nitrr.ac.in/downloads/fees/Fees_2025/Fee%20Structure%202025-26.pdf",
-    hostelPerYearInr: 35000,
-    note: "Tuition ₹5L; total ₹6.97-7.81L incl. one-time fees. Full waiver below ₹1L income.",
-  },
-  {
-    id: "nit-hamirpur", name: "NIT Hamirpur", city: "Hamirpur", state: "Himachal Pradesh",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 700000,
-    approxTotalFeesInr: 700000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://nith.ac.in/",
-    feeSourceUrl: "https://nith.ac.in/",
-    hostelPerYearInr: 50000,
-    note: "NIT in a tiny Himalayan town — dirt-cheap living, scenic campus, decent core placements.",
-  },
-  {
-    id: "nit-silchar", name: "NIT Silchar", city: "Silchar", state: "Assam",
-    cityTier: 3, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 550000,
-    approxTotalFeesInr: 550000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.nits.ac.in/",
-    feeSourceUrl: "https://www.nits.ac.in/",
-    hostelPerYearInr: 55000,
-    note: "Northeast NIT with very low COL; income-based waivers make it near-free below ₹5L.",
-  },
-  {
-    id: "iiit-allahabad", name: "IIIT Allahabad", city: "Prayagraj", state: "Uttar Pradesh",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 850000,
-    approxTotalFeesInr: 850000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://www.iiita.ac.in/",
-    feeSourceUrl: "https://www.iiita.ac.in/",
-    hostelPerYearInr: 30000,
-    note: "Top IIIT in India; ~₹8.4L total; CS placements rival mid-tier NITs at lower fees.",
-  },
-  {
-    id: "iiit-lucknow", name: "IIIT Lucknow", city: "Lucknow", state: "Uttar Pradesh",
-    cityTier: 2, type: "govt_central", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000,
-    approxTotalFeesInr: 1000000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://iiitl.ac.in/",
-    feeSourceUrl: "https://iiitl.ac.in/",
-    hostelPerYearInr: 42500,
-    note: "Tuition ₹9.6L + hostel ~₹1.7L; CS/AI focus; PPP IIIT.",
-  },
+  { id: "iit-bombay", name: "IIT Bombay", city: "Mumbai", state: "Maharashtra", cityTier: 1, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1100000, approxTotalFeesInr: 1100000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitb.ac.in/", feeSourceUrl: "https://acad.iitb.ac.in/admissions/fees-structure", hostelPerYearInr: 26000, note: "Top-ranked IIT. SC/ST/PwD get major waivers." },
+  { id: "iit-delhi", name: "IIT Delhi", city: "New Delhi", state: "Delhi", cityTier: 1, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1050000, approxTotalFeesInr: 1050000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://home.iitd.ac.in/", feeSourceUrl: "https://home.iitd.ac.in/uploads/ug/25-26/Fee%20Structure_2025-26_UG%20Entry%20Students.pdf", hostelPerYearInr: 80000, note: "Full waiver for family income below ₹1L." },
+  { id: "iit-madras", name: "IIT Madras", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 950000, approxTotalFeesInr: 950000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitm.ac.in/", feeSourceUrl: "https://fees.iitm.ac.in/assets/circular/institute_fee_circular_jul_nov_2025.pdf", hostelPerYearInr: 60000, note: "NIRF #1." },
+  { id: "iit-hyderabad", name: "IIT Hyderabad", city: "Hyderabad", state: "Telangana", cityTier: 1, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1200000, approxTotalFeesInr: 1200000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iith.ac.in/", feeSourceUrl: "https://www.iith.ac.in/admissions/", hostelPerYearInr: 70000, note: "Strong CSE/AI placements." },
+  { id: "iit-indore", name: "IIT Indore", city: "Indore", state: "Madhya Pradesh", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1100000, approxTotalFeesInr: 1100000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iiti.ac.in/", feeSourceUrl: "https://academic.iiti.ac.in/Admission/2025/New/2025%20B.Tech.%20and%20B.Des.%20Batch_Four%20Year%20Fee%20Structure_Tentative.pdf", hostelPerYearInr: 40000, note: "Fee remission for family income <₹5L." },
+  { id: "iit-bhubaneswar", name: "IIT Bhubaneswar", city: "Bhubaneswar", state: "Odisha", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 850000, approxTotalFeesInr: 850000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitbbs.ac.in/", feeSourceUrl: "https://www.iitbbs.ac.in/index.php/home/academics/fee-structure/", hostelPerYearInr: 55000, note: "~₹2L/yr tuition; SC/ST/PwD waivers." },
+  { id: "iit-bhu", name: "IIT (BHU) Varanasi", city: "Varanasi", state: "Uttar Pradesh", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1050000, approxTotalFeesInr: 1050000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://iitbhu.ac.in/", feeSourceUrl: "https://iitbhu.ac.in/contents/institute/main/docs/acad/fee_structure.pdf", hostelPerYearInr: 55000, note: "Full IIT brand with BHU heritage." },
+  { id: "iit-roorkee", name: "IIT Roorkee", city: "Roorkee", state: "Uttarakhand", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 900000, approxTotalFeesInr: 900000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitr.ac.in/", feeSourceUrl: "https://iitr.ac.in/Academics/static/Institute_Fee/2025-26/PG.pdf", hostelPerYearInr: 65000, note: "Top-5 IIT; full waiver below ₹1L income, 2/3 below ₹5L." },
+  { id: "iit-kgp", name: "IIT Kharagpur", city: "Kharagpur", state: "West Bengal", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitkgp.ac.in/", feeSourceUrl: "https://www.iitkgp.ac.in/fee-structure", hostelPerYearInr: 66000, note: "India's first IIT; largest campus." },
+  { id: "iit-mandi", name: "IIT Mandi", city: "Mandi", state: "Himachal Pradesh", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 850000, approxTotalFeesInr: 850000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitmandi.ac.in/", feeSourceUrl: "https://www.iitmandi.ac.in/academics", hostelPerYearInr: 30000, note: "Newer IIT in the Himalayas." },
+  { id: "iit-patna", name: "IIT Patna", city: "Patna", state: "Bihar", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitp.ac.in/", feeSourceUrl: "https://www.iitp.ac.in/index.php/students-corner/academic-fees", hostelPerYearInr: 60000, note: "Rising CSE placements; full waiver below ₹1L." },
+  { id: "iit-jodhpur", name: "IIT Jodhpur", city: "Jodhpur", state: "Rajasthan", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitj.ac.in/", feeSourceUrl: "https://www.iitj.ac.in/admission/index.php?id=fee_structure", hostelPerYearInr: 30000, note: "Strong AI/Data Science programs." },
+  { id: "iit-dharwad", name: "IIT Dharwad", city: "Dharwad", state: "Karnataka", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1150000, approxTotalFeesInr: 1150000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced", minBoardPct: 75, officialUrl: "https://www.iitdh.ac.in/", feeSourceUrl: "https://www.iitdh.ac.in/student-fees", hostelPerYearInr: 54000, note: "Newest IIT in a Tier-3 town." },
+  { id: "iisc-bs", name: "IISc Bangalore (BS Research)", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "govt_central", courseFocus: "engineering", program: "BS (Research)", feePeriod: "full_course", feePeriodAmountInr: 450000, approxTotalFeesInr: 450000, durationYears: 4, admissionMode: "jee_advanced", mainEntranceExam: "JEE Advanced / KVPY", minBoardPct: 75, officialUrl: "https://www.iisc.ac.in/", feeSourceUrl: "https://bs-ug.iisc.ac.in/admissions/fee-structure", hostelPerYearInr: 30000, note: "India's top research institute; fully waived for SC/ST/PwD." },
+  { id: "nit-trichy", name: "NIT Trichy", city: "Tiruchirappalli", state: "Tamil Nadu", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 650000, approxTotalFeesInr: 650000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.nitt.edu/", feeSourceUrl: "https://www.nitt.edu/home/academics/fees_section/", hostelPerYearInr: 40000, note: "#1 NIT; recruiter favourite." },
+  { id: "nit-warangal", name: "NIT Warangal", city: "Warangal", state: "Telangana", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 550000, approxTotalFeesInr: 550000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.nitw.ac.in/", feeSourceUrl: "https://www.nitw.ac.in/main/AcademicSection/Tutionfee/", hostelPerYearInr: 60000, note: "Top-3 NIT; strong CSE placements." },
+  { id: "nit-rourkela", name: "NIT Rourkela", city: "Rourkela", state: "Odisha", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000, approxTotalFeesInr: 600000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.nitrkl.ac.in/", feeSourceUrl: "https://www.nitrkl.ac.in/docs/Announcement/07082025113535080.pdf", hostelPerYearInr: 30000, note: "Top NIT; strong CSE/Mech." },
+  { id: "nit-surathkal", name: "NIT Karnataka Surathkal (NITK)", city: "Mangaluru", state: "Karnataka", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000, approxTotalFeesInr: 600000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.nitk.ac.in/", feeSourceUrl: "https://www.nitk.ac.in/document/attachments/8447/FEE_STRUCTURE_2025-26_.pdf", hostelPerYearInr: 35000, note: "Beach-side NIT; top-ranked core engineering." },
+  { id: "nit-calicut", name: "NIT Calicut", city: "Kozhikode", state: "Kerala", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 700000, approxTotalFeesInr: 700000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://nitc.ac.in/", feeSourceUrl: "https://nitc.ac.in/imgserver/uploads/attachments/nit-calicut-fee-structure-ug-pg-phd-for-the-ay-2025-26_0ffc1837-ac4a-4159-b530-21687a7a60c1_0.pdf", hostelPerYearInr: 80000, note: "Highly ranked NIT; 2/3 tuition waiver below ₹5L income." },
+  { id: "manit-bhopal", name: "MANIT Bhopal", city: "Bhopal", state: "Madhya Pradesh", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 700000, approxTotalFeesInr: 700000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.manit.ac.in/", feeSourceUrl: "https://cse.manit.ac.in/sites/default/files/addmissionsection/MANIT%20Fee%20details%2025-26_Modified%2009%2010%20%202025%20latest.pdf", hostelPerYearInr: 25000, note: "Top NIT in MP." },
+  { id: "mnit-jaipur", name: "MNIT Jaipur", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 650000, approxTotalFeesInr: 650000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.mnit.ac.in/", feeSourceUrl: "https://www.mnit.ac.in/cms/uploads/2025/05/FeeUG2025-26.pdf", hostelPerYearInr: 30000, note: "Premier NIT in the Pink City." },
+  { id: "vnit-nagpur", name: "VNIT Nagpur", city: "Nagpur", state: "Maharashtra", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000, approxTotalFeesInr: 600000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://vnit.ac.in/", feeSourceUrl: "https://vnit.ac.in/study-in-india/", hostelPerYearInr: 40000, note: "SC/ST/PwD full tuition waiver; strong core branches." },
+  { id: "svnit-surat", name: "SVNIT Surat", city: "Surat", state: "Gujarat", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000, approxTotalFeesInr: 600000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.svnit.ac.in/", feeSourceUrl: "https://www.svnit.ac.in/", hostelPerYearInr: 50000, note: "Income-based fee remission." },
+  { id: "nit-raipur", name: "NIT Raipur", city: "Raipur", state: "Chhattisgarh", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 750000, approxTotalFeesInr: 750000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.nitrr.ac.in/", feeSourceUrl: "https://www.nitrr.ac.in/downloads/fees/Fees_2025/Fee%20Structure%202025-26.pdf", hostelPerYearInr: 35000, note: "Full waiver below ₹1L income." },
+  { id: "nit-hamirpur", name: "NIT Hamirpur", city: "Hamirpur", state: "Himachal Pradesh", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 700000, approxTotalFeesInr: 700000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://nith.ac.in/", feeSourceUrl: "https://nith.ac.in/", hostelPerYearInr: 50000, note: "Tiny Himalayan town; dirt-cheap living." },
+  { id: "nit-silchar", name: "NIT Silchar", city: "Silchar", state: "Assam", cityTier: 3, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 550000, approxTotalFeesInr: 550000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.nits.ac.in/", feeSourceUrl: "https://www.nits.ac.in/", hostelPerYearInr: 55000, note: "Northeast NIT; very low COL." },
+  { id: "iiit-allahabad", name: "IIIT Allahabad", city: "Prayagraj", state: "Uttar Pradesh", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 850000, approxTotalFeesInr: 850000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://www.iiita.ac.in/", feeSourceUrl: "https://www.iiita.ac.in/", hostelPerYearInr: 30000, note: "Top IIIT; CS placements rival mid-tier NITs." },
+  { id: "iiit-lucknow", name: "IIIT Lucknow", city: "Lucknow", state: "Uttar Pradesh", cityTier: 2, type: "govt_central", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1000000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://iiitl.ac.in/", feeSourceUrl: "https://iiitl.ac.in/", hostelPerYearInr: 42500, note: "CS/AI focus; PPP IIIT." },
 
   // ════════════════════════════════════════════════════════════════════════
-  //  ENGINEERING — Govt state (DTU, VJTI, COEP, Anna CEG, MSU Baroda)
+  //  GOVT STATE (DTU, VJTI, COEP, Anna CEG, MSU Baroda)
   // ════════════════════════════════════════════════════════════════════════
-  {
-    id: "dtu", name: "DTU (Delhi Technological University)", city: "New Delhi", state: "Delhi",
-    cityTier: 1, type: "govt_state", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 900000,
-    approxTotalFeesInr: 900000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75,
-    officialUrl: "https://dtu.ac.in/",
-    feeSourceUrl: "https://dtu.ac.in/Web/notice/2025/july/file0762.pdf",
-    hostelPerYearInr: 95000,
-    note: "Top Delhi state engineering univ; ~₹2.3L/yr general; strong CSE placements.",
-  },
-  {
-    id: "vjti", name: "VJTI Mumbai", city: "Mumbai", state: "Maharashtra",
-    cityTier: 1, type: "govt_state", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 350000,
-    approxTotalFeesInr: 350000, durationYears: 4,
-    admissionMode: "state_exam", mainEntranceExam: "MHT-CET / JEE Main", minBoardPct: 50,
-    officialUrl: "https://vjti.ac.in/",
-    feeSourceUrl: "https://vjti.ac.in/fee-structure/",
-    hostelPerYearInr: 50000,
-    note: "Premier Maharashtra govt engineering institute; ~₹72-85K/yr open category, strong placements.",
-  },
-  {
-    id: "coep", name: "COEP Pune (College of Engineering Pune)", city: "Pune", state: "Maharashtra",
-    cityTier: 1, type: "govt_state", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000,
-    approxTotalFeesInr: 600000, durationYears: 4,
-    admissionMode: "state_exam", mainEntranceExam: "MHT-CET", minBoardPct: 50,
-    officialUrl: "https://www.coeptech.ac.in/",
-    feeSourceUrl: "https://www.coeptech.ac.in/useful-links/university-sections/ac-section/fees-structure/",
-    hostelPerYearInr: 45000,
-    note: "Est. 1854 — one of India's oldest engineering colleges; ~₹1.4-1.6L/yr open category.",
-  },
-  {
-    id: "ceg-anna", name: "CEG Anna University (College of Engineering Guindy)", city: "Chennai", state: "Tamil Nadu",
-    cityTier: 1, type: "govt_state", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 140000,
-    approxTotalFeesInr: 140000, durationYears: 4,
-    admissionMode: "state_exam", mainEntranceExam: "TNEA (12th marks based)", minBoardPct: 50,
-    officialUrl: "https://www.annauniv.edu/",
-    feeSourceUrl: "https://www.annauniv.edu/pdf/CEG_UG_Fee_Structure.pdf",
-    hostelPerYearInr: 78000,
-    note: "TN state govt; ~₹35K/yr tuition. Best fee-to-reputation ratio in TN.",
-  },
-  {
-    id: "psg-coimbatore", name: "PSG College of Technology", city: "Coimbatore", state: "Tamil Nadu",
-    cityTier: 2, type: "private_aided", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 200000,
-    approxTotalFeesInr: 200000, durationYears: 4,
-    admissionMode: "state_exam", mainEntranceExam: "TNEA / JEE Main", minBoardPct: 50,
-    officialUrl: "https://www.psgtech.edu/",
-    feeSourceUrl: "https://www.psgtech.edu/",
-    hostelPerYearInr: 72000,
-    note: "Govt-aided seats ~₹55K/yr tuition; legendary placements for an aided college.",
-  },
-  {
-    id: "msu-baroda", name: "MS University of Baroda (Faculty of Tech & Engg)", city: "Vadodara", state: "Gujarat",
-    cityTier: 2, type: "govt_state", courseFocus: "engineering",
-    program: "B.E.", feePeriod: "full_course", feePeriodAmountInr: 400000,
-    approxTotalFeesInr: 400000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 50,
-    officialUrl: "https://www.msubaroda.ac.in/",
-    feeSourceUrl: "https://www.msubaroda.ac.in/",
-    hostelPerYearInr: 25000,
-    note: "State univ; B.E. tuition ~₹4.2L total. Very affordable in a heritage college town.",
-  },
-  {
-    id: "bits-pilani", name: "BITS Pilani (Pilani Campus)", city: "Pilani", state: "Rajasthan",
-    cityTier: 3, type: "private", courseFocus: "engineering",
-    program: "B.E.", feePeriod: "full_course", feePeriodAmountInr: 2600000,
-    approxTotalFeesInr: 2600000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "BITSAT", minBoardPct: 75,
-    officialUrl: "https://www.bits-pilani.ac.in/",
-    feeSourceUrl: "https://www.bits-pilani.ac.in/admission/",
-    hostelPerYearInr: 65000,
-    note: "Premier private engineering in a small Rajasthan town; placements rival top IITs.",
-  },
-  {
-    id: "bit-mesra", name: "BIT Mesra", city: "Ranchi", state: "Jharkhand",
-    cityTier: 3, type: "private_aided", courseFocus: "engineering",
-    program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1700000,
-    approxTotalFeesInr: 1700000, durationYears: 4,
-    admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 60,
-    officialUrl: "https://www.bitmesra.ac.in/",
-    feeSourceUrl: "https://bitmesra.ac.in/UploadedDocuments/admadmission/files/Financial%20information%20and%20fees%20payable%202025.pdf",
-    hostelPerYearInr: 84000,
-    note: "Legacy Birla institute with strong alumni network; Ranchi is cheap, BIT is respected for core engineering.",
-  },
+  { id: "dtu", name: "DTU (Delhi Technological University)", city: "New Delhi", state: "Delhi", cityTier: 1, type: "govt_state", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 900000, approxTotalFeesInr: 900000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 75, officialUrl: "https://dtu.ac.in/", feeSourceUrl: "https://dtu.ac.in/Web/notice/2025/july/file0762.pdf", hostelPerYearInr: 95000, note: "Top Delhi state engineering univ; strong CSE." },
+  { id: "vjti", name: "VJTI Mumbai", city: "Mumbai", state: "Maharashtra", cityTier: 1, type: "govt_state", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 350000, approxTotalFeesInr: 350000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "MHT-CET / JEE Main", minBoardPct: 50, officialUrl: "https://vjti.ac.in/", feeSourceUrl: "https://vjti.ac.in/fee-structure/", hostelPerYearInr: 50000, note: "Premier Maharashtra govt institute; strong placements." },
+  { id: "coep", name: "COEP Pune (College of Engineering Pune)", city: "Pune", state: "Maharashtra", cityTier: 1, type: "govt_state", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 600000, approxTotalFeesInr: 600000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "MHT-CET", minBoardPct: 50, officialUrl: "https://www.coeptech.ac.in/", feeSourceUrl: "https://www.coeptech.ac.in/useful-links/university-sections/ac-section/fees-structure/", hostelPerYearInr: 45000, note: "Est. 1854; one of India's oldest engineering colleges." },
+  { id: "ceg-anna", name: "CEG Anna University (College of Engineering Guindy)", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "govt_state", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 140000, approxTotalFeesInr: 140000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "TNEA (12th marks based)", minBoardPct: 50, officialUrl: "https://www.annauniv.edu/", feeSourceUrl: "https://www.annauniv.edu/pdf/CEG_UG_Fee_Structure.pdf", hostelPerYearInr: 78000, note: "TN state govt; ~₹35K/yr tuition. Best fee-to-rep ratio in TN." },
+  { id: "msu-baroda", name: "MS University of Baroda (Faculty of Tech & Engg)", city: "Vadodara", state: "Gujarat", cityTier: 2, type: "govt_state", courseFocus: "engineering", program: "B.E.", feePeriod: "full_course", feePeriodAmountInr: 400000, approxTotalFeesInr: 400000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 50, officialUrl: "https://www.msubaroda.ac.in/", feeSourceUrl: "https://www.msubaroda.ac.in/", hostelPerYearInr: 25000, note: "Heritage state univ; very affordable." },
+  { id: "doon-u", name: "Doon University", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "govt_state", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 102138, approxTotalFeesInr: 320000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Doon Univ entrance / Merit-based", minBoardPct: 50, officialUrl: "https://doonuniversity.ac.in/", feeSourceUrl: "https://collegedunia.com/university/25982-doon-university-dehradun", hostelPerYearInr: 50000, note: "State govt university — cheapest in Dehradun. Total ~₹3.2L." },
 
   // ════════════════════════════════════════════════════════════════════════
-  //  ENGINEERING — Private universities · NO JEE Main needed (direct / own exam)
-  //  These accept students based on 10+2 marks or their own entrance test.
-  //  All fees verified June 2026. NCR + Pan-India batch.
+  //  PRIVATE AIDED + BITS PILANI + BIT MESRA
   // ════════════════════════════════════════════════════════════════════════
+  { id: "psg-coimbatore", name: "PSG College of Technology", city: "Coimbatore", state: "Tamil Nadu", cityTier: 2, type: "private_aided", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 200000, approxTotalFeesInr: 200000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "TNEA / JEE Main", minBoardPct: 50, officialUrl: "https://www.psgtech.edu/", feeSourceUrl: "https://www.psgtech.edu/", hostelPerYearInr: 72000, note: "Govt-aided ~₹55K/yr tuition; legendary placements." },
+  { id: "bits-pilani", name: "BITS Pilani (Pilani Campus)", city: "Pilani", state: "Rajasthan", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.E.", feePeriod: "full_course", feePeriodAmountInr: 2600000, approxTotalFeesInr: 2600000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "BITSAT", minBoardPct: 75, officialUrl: "https://www.bits-pilani.ac.in/", feeSourceUrl: "https://www.bits-pilani.ac.in/admission/", hostelPerYearInr: 65000, note: "Placements rival top IITs; competitive BITSAT." },
+  { id: "bit-mesra", name: "BIT Mesra", city: "Ranchi", state: "Jharkhand", cityTier: 3, type: "private_aided", courseFocus: "engineering", program: "B.Tech", feePeriod: "full_course", feePeriodAmountInr: 1700000, approxTotalFeesInr: 1700000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main", minBoardPct: 60, officialUrl: "https://www.bitmesra.ac.in/", feeSourceUrl: "https://bitmesra.ac.in/UploadedDocuments/admadmission/files/Financial%20information%20and%20fees%20payable%202025.pdf", hostelPerYearInr: 84000, note: "Legacy Birla institute with strong alumni network." },
 
-  // ── NCR / North India ──
-  {
-    id: "galgotias-u", name: "Galgotias University", city: "Greater Noida", state: "Uttar Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 164000,
-    approxTotalFeesInr: 656000, durationYears: 4,
-    admissionMode: "jee_main_or_direct", mainEntranceExam: "Direct on 12th / JEE / CUET / SAT", minBoardPct: 60,
-    officialUrl: "https://www.galgotiasuniversity.edu.in/",
-    feeSourceUrl: "https://www.galgotiasuniversity.edu.in/p/fee-structure-eligibility",
-    hostelPerYearInr: 120000,
-    note: "Per-annum tuition. Direct admission accepted with 60% PCM. CSE specializations (AI/ML, Data Science) priced slightly higher.",
-  },
-  {
-    id: "gcet-greater-noida", name: "Galgotias College of Engg & Tech (GCET)", city: "Greater Noida", state: "Uttar Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 109603,
-    approxTotalFeesInr: 438412, durationYears: 4,
-    admissionMode: "state_exam", mainEntranceExam: "JEE Main + AKTU counselling", minBoardPct: 50,
-    officialUrl: "https://galgotiacollege.edu/",
-    feeSourceUrl: "https://galgotiacollege.edu/public/uploads/all/4438/GCET-Fees-Structure-2025-26.pdf",
-    hostelPerYearInr: 100000,
-    note: "AKTU-affiliated. Cheapest in this list but admission is via JEE Main + AKTU counselling — different college from Galgotias University.",
-  },
-  {
-    id: "noida-international", name: "Noida International University (NIU)", city: "Greater Noida", state: "Uttar Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 206000,
-    approxTotalFeesInr: 824000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50,
-    officialUrl: "https://niu.edu.in/",
-    feeSourceUrl: "https://niu.edu.in/rs_elements/fee-structure-2025/",
-    hostelPerYearInr: 110000,
-    note: "Per-annum fee on official 2025 page. Mostly direct admission. Placements are modest — watch out for hidden one-time charges.",
-  },
-  {
-    id: "sharda-u", name: "Sharda University", city: "Greater Noida", state: "Uttar Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 250000,
-    approxTotalFeesInr: 1000000, durationYears: 4,
-    admissionMode: "jee_main_or_direct", mainEntranceExam: "SUAT / JEE Main / direct on 12th", minBoardPct: 50,
-    officialUrl: "https://www.sharda.ac.in/",
-    feeSourceUrl: "https://www.sharda.ac.in/attachments/downloadcenter_files/fee-booklet-2025-web.pdf",
-    hostelPerYearInr: 130000,
-    note: "Annual fee per 2025-26 fee booklet. SUAT scholarships can bring 25-100% off. Direct admission on board marks.",
-  },
-  {
-    id: "amity-noida", name: "Amity University Noida", city: "Noida", state: "Uttar Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 364000,
-    approxTotalFeesInr: 1752000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "Amity JEE / direct on board marks", minBoardPct: 60,
-    officialUrl: "https://www.amity.edu/",
-    feeSourceUrl: "https://www.amity.edu/admissions/fees.aspx",
-    hostelPerYearInr: 175000,
-    note: "Non-sponsored category annual fee; ~10% hike built in (4-yr total ~₹17.5L). Big brand, mixed placement quality by branch.",
-  },
-  {
-    id: "bennett-u", name: "Bennett University", city: "Greater Noida", state: "Uttar Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 380000,
-    approxTotalFeesInr: 1520000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "BETT / JEE Main / direct", minBoardPct: 60,
-    officialUrl: "https://www.bennett.edu.in/",
-    feeSourceUrl: "https://www.bennett.edu.in/",
-    hostelPerYearInr: 130000,
-    note: "Best placements in this private-NCR cohort. Eligibility 60% PCM (not aggregate) — check PCM split, not just overall %.",
-  },
-  {
-    id: "manav-rachna", name: "Manav Rachna University", city: "Faridabad", state: "Haryana",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 249000,
-    approxTotalFeesInr: 996000, durationYears: 4,
-    admissionMode: "jee_main_or_direct", mainEntranceExam: "MRNAT / JEE Main / direct on 12th", minBoardPct: 50,
-    officialUrl: "https://manavrachna.edu.in/",
-    feeSourceUrl: "https://mru.edu.in/university/fee-structure-mru/",
-    hostelPerYearInr: 125000,
-    note: "Annual tuition paid in two semester installments; accepts MRNAT, JEE Main, or board-marks direct.",
-  },
-  {
-    id: "kr-mangalam", name: "K.R. Mangalam University", city: "Gurugram", state: "Haryana",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 125000,
-    approxTotalFeesInr: 1000000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50,
-    officialUrl: "https://www.krmangalam.edu.in/",
-    feeSourceUrl: "https://www.krmangalam.edu.in/fee-structure/",
-    hostelPerYearInr: 140000,
-    note: "Per-SEMESTER fee on official page (₹1.25L × 2 = ₹2.5L/yr). May rise 10%/yr. Growing CSE focus.",
-  },
-  {
-    id: "gd-goenka", name: "GD Goenka University", city: "Sohna, Gurugram", state: "Haryana",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 275000,
-    approxTotalFeesInr: 1100000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50,
-    officialUrl: "https://www.gdgoenkauniversity.com/",
-    feeSourceUrl: "https://www.gdgoenkauniversity.com/admissions/fee-structure",
-    hostelPerYearInr: 150000,
-    note: "Annual tuition + one-time admission/security ~₹50K. Direct admission on board marks; big plush campus, placements modest.",
-  },
-  {
-    id: "niit-u", name: "NIIT University", city: "Neemrana", state: "Rajasthan",
-    cityTier: 3, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 365000,
-    approxTotalFeesInr: 1460000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "NUET / NIITNAT / JEE Main", minBoardPct: 60,
-    officialUrl: "https://niituniversity.in/",
-    feeSourceUrl: "https://niituniversity.in/admissions/fee-structure",
-    hostelPerYearInr: 200000,
-    note: "Residential campus — hostel mandatory (adds ~₹8L over 4 yrs). Eligibility 60% PCM.",
-  },
-  {
-    id: "iimt-meerut", name: "IIMT University", city: "Meerut", state: "Uttar Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 155800,
-    approxTotalFeesInr: 602000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50,
-    officialUrl: "https://iimtindia.net/",
-    feeSourceUrl: "https://iimtindia.net/fee-structure.php",
-    hostelPerYearInr: 90000,
-    note: "Per-year fee. Direct admission, low cut-off (50% aggregate). Placement quality is the watch-out.",
-  },
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — NCR (Greater Noida / Noida / Gurugram / Faridabad)
+  //  Most accept direct admission or their own entrance test.
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "galgotias-u", name: "Galgotias University", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 164000, approxTotalFeesInr: 656000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "Direct on 12th / JEE / CUET / SAT", minBoardPct: 60, officialUrl: "https://www.galgotiasuniversity.edu.in/", feeSourceUrl: "https://www.galgotiasuniversity.edu.in/p/fee-structure-eligibility", hostelPerYearInr: 120000, note: "Direct admission with 60% PCM. AI/ML/DS specializations cost slightly more." },
+  { id: "gcet-greater-noida", name: "Galgotias College of Engg & Tech (GCET)", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 109603, approxTotalFeesInr: 438412, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main + AKTU counselling", minBoardPct: 50, officialUrl: "https://galgotiacollege.edu/", feeSourceUrl: "https://galgotiacollege.edu/public/uploads/all/4438/GCET-Fees-Structure-2025-26.pdf", hostelPerYearInr: 100000, note: "AKTU-affiliated. Cheapest in NCR but needs JEE Main + AKTU counselling — different from Galgotias University." },
+  { id: "noida-international", name: "Noida International University (NIU)", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 206000, approxTotalFeesInr: 824000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50, officialUrl: "https://niu.edu.in/", feeSourceUrl: "https://niu.edu.in/rs_elements/fee-structure-2025/", hostelPerYearInr: 110000, note: "Direct admission. Placements modest." },
+  { id: "sharda-u", name: "Sharda University", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 250000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "SUAT / JEE Main / direct", minBoardPct: 50, officialUrl: "https://www.sharda.ac.in/", feeSourceUrl: "https://www.sharda.ac.in/attachments/downloadcenter_files/fee-booklet-2025-web.pdf", hostelPerYearInr: 130000, note: "SUAT scholarships 25-100% off. Direct on board marks." },
+  { id: "amity-noida", name: "Amity University Noida", city: "Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 364000, approxTotalFeesInr: 1752000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "Amity JEE / direct", minBoardPct: 60, officialUrl: "https://www.amity.edu/", feeSourceUrl: "https://www.amity.edu/admissions/fees.aspx", hostelPerYearInr: 175000, note: "~10% hike built in; total ~₹17.5L. Mixed placement quality." },
+  { id: "bennett-u", name: "Bennett University", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 380000, approxTotalFeesInr: 1520000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "BETT / JEE Main / direct", minBoardPct: 60, officialUrl: "https://www.bennett.edu.in/", feeSourceUrl: "https://www.bennett.edu.in/", hostelPerYearInr: 130000, note: "Best placements in NCR-private cohort. 60% PCM (check PCM split, not aggregate)." },
+  { id: "manav-rachna", name: "Manav Rachna University", city: "Faridabad", state: "Haryana", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 249000, approxTotalFeesInr: 996000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "MRNAT / JEE Main / direct", minBoardPct: 50, officialUrl: "https://manavrachna.edu.in/", feeSourceUrl: "https://mru.edu.in/university/fee-structure-mru/", hostelPerYearInr: 125000, note: "Two semester installments." },
+  { id: "kr-mangalam", name: "K.R. Mangalam University", city: "Gurugram", state: "Haryana", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 125000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50, officialUrl: "https://www.krmangalam.edu.in/", feeSourceUrl: "https://www.krmangalam.edu.in/fee-structure/", hostelPerYearInr: 140000, note: "₹1.25L × 2 = ₹2.5L/yr. May rise 10%/yr." },
+  { id: "gd-goenka", name: "GD Goenka University", city: "Sohna, Gurugram", state: "Haryana", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 275000, approxTotalFeesInr: 1100000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50, officialUrl: "https://www.gdgoenkauniversity.com/", feeSourceUrl: "https://www.gdgoenkauniversity.com/admissions/fee-structure", hostelPerYearInr: 150000, note: "Plus one-time admission/security ~₹50K. Plush campus, placements modest." },
+  { id: "niit-u", name: "NIIT University", city: "Neemrana", state: "Rajasthan", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 365000, approxTotalFeesInr: 1460000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "NUET / NIITNAT / JEE Main", minBoardPct: 60, officialUrl: "https://niituniversity.in/", feeSourceUrl: "https://niituniversity.in/admissions/fee-structure", hostelPerYearInr: 200000, note: "Residential — hostel mandatory (adds ~₹8L over 4 yrs). 60% PCM." },
+  { id: "iimt-meerut", name: "IIMT University", city: "Meerut", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 155800, approxTotalFeesInr: 602000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50, officialUrl: "https://iimtindia.net/", feeSourceUrl: "https://iimtindia.net/fee-structure.php", hostelPerYearInr: 90000, note: "Direct, low cutoff. Placement quality is the watch-out." },
+  { id: "ncu-gurugram", name: "The NorthCap University (NCU)", city: "Gurugram", state: "Haryana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 327500, approxTotalFeesInr: 1370000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE Main / CUET / NCU's own entrance", minBoardPct: 60, officialUrl: "https://www.ncuindia.edu/", feeSourceUrl: "https://www.ncuindia.edu/fee-structure/", hostelPerYearInr: 130000, note: "NCU runs own entrance for applicants without JEE/CUET. 3% YoY hike." },
+  { id: "bmu-gurugram", name: "BML Munjal University", city: "Gurugram", state: "Haryana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 387500, approxTotalFeesInr: 1550000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE Main / CUET / SAT / BMU-SAT", minBoardPct: 60, officialUrl: "https://www.bmu.edu.in/", feeSourceUrl: "https://www.bmu.edu.in/courses/b-tech/b-tech-computer-science-engineering/", hostelPerYearInr: 130000, note: "Applicants without JEE/CUET/SAT called for BMU-SAT. Merit scholarships." },
+  { id: "sushant-u", name: "Sushant University (formerly Ansal)", city: "Gurugram", state: "Haryana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE (Hons)", feePeriod: "full_course", feePeriodAmountInr: 1020800, approxTotalFeesInr: 1020800, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct (70% Class 12 + 30% interview)", minBoardPct: 50, officialUrl: "https://sushantuniversity.edu.in/", feeSourceUrl: "https://sushantuniversity.edu.in/admin-assets/uploaddata/Fees-2026-SET.pdf", hostelPerYearInr: 120000, note: "Direct admission. Haryana domicile fee concessions 10-50% available." },
+  { id: "iilm-gurugram", name: "IILM University, Gurugram", city: "Gurugram", state: "Haryana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 300000, approxTotalFeesInr: 1200000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE Main / CUET / Class 12 merit + interview", minBoardPct: 50, officialUrl: "https://iilm.edu/", feeSourceUrl: "https://iilm.edu/wp-content/uploads/2026/01/pogramme-fee-2026.pdf", hostelPerYearInr: 100000, note: "₹40K one-time registration. Merit scholarship up to 25%. Greater Noida campus cheaper." },
 
-  // ── Pan-India private universities ──
-  {
-    id: "lpu", name: "Lovely Professional University (LPU)", city: "Phagwara", state: "Punjab",
-    cityTier: 3, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 140000,
-    approxTotalFeesInr: 1120000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "LPUNEST (own test)", minBoardPct: 60,
-    officialUrl: "https://www.lpu.in/",
-    feeSourceUrl: "https://www.lpu.in/programmes/engineering/b-tech-computer-science",
-    hostelPerYearInr: 90000,
-    note: "Per-SEMESTER fee. LPUNEST scholarships up to 100% reduce net payable significantly. 60% in 10+2 with PCM.",
-  },
-  {
-    id: "chandigarh-u", name: "Chandigarh University", city: "Mohali", state: "Punjab",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 80200,
-    approxTotalFeesInr: 641600, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "CUCET / direct on 12th", minBoardPct: 50,
-    officialUrl: "https://www.cuchd.in/",
-    feeSourceUrl: "https://www.cuchd.in/",
-    hostelPerYearInr: 90000,
-    note: "Per-SEMESTER fee. CUCET scholarships up to 100%. Strong placement reputation across NCR/Punjab.",
-  },
-  {
-    id: "christ-u", name: "Christ University (Kengeri Campus)", city: "Bangalore", state: "Karnataka",
-    cityTier: 1, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 248000,
-    approxTotalFeesInr: 992000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "CUET (Christ) + interview/SOP", minBoardPct: 55,
-    officialUrl: "https://christuniversity.in/",
-    feeSourceUrl: "https://christuniversity.in/",
-    hostelPerYearInr: 90000,
-    note: "Selective intake; admission has interview + SOP component. Strong brand in Bangalore.",
-  },
-  {
-    id: "kiit-bhubaneswar", name: "KIIT (Kalinga Institute)", city: "Bhubaneswar", state: "Odisha",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 462750,
-    approxTotalFeesInr: 1851000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "KIITEE (own test)", minBoardPct: 60,
-    officialUrl: "https://kiit.ac.in/",
-    feeSourceUrl: "https://kiit.ac.in/",
-    hostelPerYearInr: 120000,
-    note: "Uniform fee across all B.Tech branches incl. CSE. Strong placement record. KIITEE rank determines scholarships.",
-  },
-  {
-    id: "srm-kattankulathur", name: "SRM IST (Kattankulathur)", city: "Chennai", state: "Tamil Nadu",
-    cityTier: 1, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 475000,
-    approxTotalFeesInr: 1900000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "SRMJEEE (own test)", minBoardPct: 50,
-    officialUrl: "https://www.srmist.edu.in/",
-    feeSourceUrl: "https://www.srmist.edu.in/",
-    hostelPerYearInr: 150000,
-    note: "CSE/AI specialisations are at the top of SRM's fee bands. SRMJEEE for admission.",
-  },
-  {
-    id: "vit-vellore", name: "VIT Vellore", city: "Vellore", state: "Tamil Nadu",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 207000,
-    approxTotalFeesInr: 828000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "VITEEE (own test)", minBoardPct: 60,
-    officialUrl: "https://vit.ac.in/",
-    feeSourceUrl: "https://vit.ac.in/admission/ug/fee-structure",
-    hostelPerYearInr: 150000,
-    note: "VITEEE rank determines fee category (Group A ~₹1.73L/yr → Cat 5 ~₹6.3L/yr). Shown is mid Group A.",
-  },
-  {
-    id: "manipal-jaipur", name: "Manipal University Jaipur", city: "Jaipur", state: "Rajasthan",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 487000,
-    approxTotalFeesInr: 1948000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "MET / direct on 12th marks", minBoardPct: 50,
-    officialUrl: "https://jaipur.manipal.edu/",
-    feeSourceUrl: "https://jaipur.manipal.edu/",
-    hostelPerYearInr: 130000,
-    note: "Admission via MET or direct on 12th marks. Carries Manipal brand premium.",
-  },
-  {
-    id: "mit-wpu-pune", name: "MIT World Peace University (MIT-WPU)", city: "Pune", state: "Maharashtra",
-    cityTier: 1, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 410000,
-    approxTotalFeesInr: 1640000, durationYears: 4,
-    admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE / MHT-CET / PERA-CET", minBoardPct: 50,
-    officialUrl: "https://mitwpu.edu.in/",
-    feeSourceUrl: "https://mitwpu.edu.in/programme/btech-computer-science-and-engineering",
-    hostelPerYearInr: 150000,
-    note: "Scholarships 25-100% based on entrance percentile. SOP required.",
-  },
-  {
-    id: "sit-pune", name: "Symbiosis Institute of Technology (SIT Pune)", city: "Pune", state: "Maharashtra",
-    cityTier: 1, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 400000,
-    approxTotalFeesInr: 1600000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "SITEEE (own test)", minBoardPct: 50,
-    officialUrl: "https://www.sitpune.edu.in/",
-    feeSourceUrl: "https://www.sitpune.edu.in/fees-structure",
-    hostelPerYearInr: 120000,
-    note: "Symbiosis brand. Fees may escalate up to 10%/yr through the program.",
-  },
-  {
-    id: "gitam", name: "GITAM (Deemed-to-be University)", city: "Visakhapatnam", state: "Andhra Pradesh",
-    cityTier: 2, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 346000,
-    approxTotalFeesInr: 1493000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "GAT (own test)", minBoardPct: 60,
-    officialUrl: "https://www.gitam.edu/",
-    feeSourceUrl: "https://www.gitam.edu/",
-    hostelPerYearInr: 130000,
-    note: "Fees escalate ~5%/yr across the 4-year program. GAT admission test.",
-  },
-  {
-    id: "reva-u", name: "REVA University", city: "Bangalore", state: "Karnataka",
-    cityTier: 1, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 350000,
-    approxTotalFeesInr: 1400000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks / KCET / COMEDK / JEE", minBoardPct: 50,
-    officialUrl: "https://www.reva.edu.in/",
-    feeSourceUrl: "https://www.reva.edu.in/",
-    hostelPerYearInr: 110000,
-    note: "Direct admission on 12th marks or KCET/COMEDK/JEE. Mid-tier Bangalore deemed university.",
-  },
-  {
-    id: "jain-u", name: "Jain (Deemed-to-be University)", city: "Bangalore", state: "Karnataka",
-    cityTier: 1, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 325000,
-    approxTotalFeesInr: 1300000, durationYears: 4,
-    admissionMode: "private_exam", mainEntranceExam: "JET / JEE Main / COMEDK / KCET", minBoardPct: 50,
-    officialUrl: "https://www.jainuniversity.ac.in/",
-    feeSourceUrl: "https://www.jainuniversity.ac.in/",
-    hostelPerYearInr: 120000,
-    note: "FET (engineering campus) at Jakkasandra. Accepts multiple entrance routes.",
-  },
-  {
-    id: "dit-u", name: "DIT University", city: "Dehradun", state: "Uttarakhand",
-    cityTier: 3, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 343800,
-    approxTotalFeesInr: 1573000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50,
-    officialUrl: "https://www.dituniversity.edu.in/",
-    feeSourceUrl: "https://www.dituniversity.edu.in/",
-    hostelPerYearInr: 130000,
-    note: "Direct admission on 12th marks. ~26% scholarship for Uttarakhand state quota.",
-  },
-  {
-    id: "graphic-era", name: "Graphic Era (Deemed-to-be University)", city: "Dehradun", state: "Uttarakhand",
-    cityTier: 3, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 191000,
-    approxTotalFeesInr: 1500000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks / JEE", minBoardPct: 60,
-    officialUrl: "https://geu.ac.in/",
-    feeSourceUrl: "https://geu.ac.in/",
-    hostelPerYearInr: 150000,
-    note: "Direct admission on 12th marks or JEE. CSE branches fall in the higher fee bracket.",
-  },
-  {
-    id: "chitkara-u", name: "Chitkara University", city: "Rajpura", state: "Punjab",
-    cityTier: 3, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 210000,
-    approxTotalFeesInr: 860000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50,
-    officialUrl: "https://www.chitkara.edu.in/",
-    feeSourceUrl: "https://www.chitkara.edu.in/",
-    hostelPerYearInr: 100000,
-    note: "Direct admission on 12th marks. ₹20K one-time admission fee. Solid placements in this tier.",
-  },
-  {
-    id: "gla-mathura", name: "GLA University", city: "Mathura", state: "Uttar Pradesh",
-    cityTier: 3, type: "private", courseFocus: "engineering",
-    program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 208000,
-    approxTotalFeesInr: 880000, durationYears: 4,
-    admissionMode: "direct", mainEntranceExam: "Direct on 12th marks / GLAET", minBoardPct: 50,
-    officialUrl: "https://www.gla.ac.in/",
-    feeSourceUrl: "https://www.gla.ac.in/",
-    hostelPerYearInr: 90000,
-    note: "Direct admission on 12th marks or GLAET. One of the more affordable options in north India.",
-  },
+  // ── Greater Noida + Ghaziabad AKTU-affiliated (need JEE Main rank but also management quota) ──
+  { id: "gniot", name: "GNIOT (Greater Noida Inst of Tech)", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 180000, approxTotalFeesInr: 705000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main + AKTU/UPTAC counselling (mgmt quota direct)", minBoardPct: 45, officialUrl: "https://www.gniotgroup.edu.in/", feeSourceUrl: "https://www.gniotgroup.edu.in/fees.php", hostelPerYearInr: 148500, note: "PCM with one of Chem/Bio/Vocational. Management quota seats available." },
+  { id: "akgec", name: "AKGEC (Ajay Kumar Garg Engg College)", city: "Ghaziabad", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 142156, approxTotalFeesInr: 570000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main + AKTU/UPTAC counselling", minBoardPct: 45, officialUrl: "https://www.akgec.ac.in/", feeSourceUrl: "https://www.akgec.ac.in/fee-new-students/", hostelPerYearInr: 145000, note: "Fee Waiver Scheme drops academic fee to ~₹41K/yr for qualifying students." },
+  { id: "kiet-ghaziabad", name: "KIET Group of Institutions", city: "Ghaziabad", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 152999, approxTotalFeesInr: 612000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main / CUET / KEE; AKTU counselling for state quota", minBoardPct: 45, officialUrl: "https://www.kiet.edu/", feeSourceUrl: "https://www.old.kiet.edu/fee-structure-for-new-students", hostelPerYearInr: 122000, note: "Multiple entrance routes. Strong placements." },
+  { id: "ipec-ghaziabad", name: "Inderprastha Engineering College (IPEC)", city: "Ghaziabad", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 110000, approxTotalFeesInr: 445000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main + AKTU/UPTAC counselling", minBoardPct: 45, officialUrl: "https://www.ipec.org.in/", feeSourceUrl: "https://www.ipec.org.in/admission/fee-structure/", hostelPerYearInr: 104000, note: "TFW (Tuition Fee Waiver) drops fees to ₹29.5K/yr for qualifiers." },
+  { id: "its-greater-noida", name: "ITS Engineering College", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 132000, approxTotalFeesInr: 530000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main + AKTU counselling (mgmt quota also)", minBoardPct: 45, officialUrl: "https://itsengg.edu.in/public/", feeSourceUrl: "https://itsengg.edu.in/public/Eligibility_criteria", hostelPerYearInr: 90000, note: "AKTU-affiliated. PCM + one of Chem/CS/Bio." },
+  { id: "mangalmay", name: "Mangalmay Institute of Engg & Tech", city: "Greater Noida", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 120000, approxTotalFeesInr: 516000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main + AKTU counselling (mgmt quota also)", minBoardPct: 45, officialUrl: "https://www.mangalmay.org/", feeSourceUrl: "https://www.mangalmay.org/blogs/how-much-is-the-b-tech-fee-at-mangalmay-greater-noida", hostelPerYearInr: 90000, note: "AKTU-affiliated." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — Uttarakhand low-fee (Roorkee + Dehradun)
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "coer", name: "College of Engineering Roorkee (COER)", city: "Roorkee", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 105000, approxTotalFeesInr: 672600, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / UKSEE / Direct on 12th", minBoardPct: 50, officialUrl: "https://www.coer.ac.in/", feeSourceUrl: "https://www.coer.ac.in/admissions/fee-structure", hostelPerYearInr: 110000, note: "Tuition ₹1.05L/yr; total incl. amenities/uniform ~₹6.72L. Now COER University." },
+  { id: "quantum-u", name: "Quantum University, Roorkee", city: "Roorkee", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 119500, approxTotalFeesInr: 478000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "QCET / JEE Main / Direct on 12th", minBoardPct: 50, officialUrl: "https://quantumuniversity.edu.in/", feeSourceUrl: "https://quantumuniversity.edu.in/", hostelPerYearInr: 85000, note: "Range ₹1.10L-1.40L across specializations." },
+  { id: "rit-roorkee", name: "Roorkee Institute of Technology (RIT)", city: "Roorkee", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 130000, approxTotalFeesInr: 640000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / UKSEE / Direct on 12th", minBoardPct: 45, officialUrl: "https://www.rit.ac.in/", feeSourceUrl: "https://www.rit.ac.in/", hostelPerYearInr: 85000, note: "+₹25K admission fee + exam fee. 20% scholarship if >80% in 12th." },
+  { id: "rce-roorkee", name: "Roorkee College of Engineering (RCE)", city: "Roorkee", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 105000, approxTotalFeesInr: 420000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / UKSEE / Direct on 12th", minBoardPct: 45, officialUrl: "https://rce.ac.in/", feeSourceUrl: "https://rce.ac.in/", hostelPerYearInr: 55000, note: "One of the lowest fees in Roorkee. Hostel/mess optional." },
+  { id: "shivalik-dehradun", name: "Shivalik College of Engineering", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 124000, approxTotalFeesInr: 560000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / UKSEE / Direct on 12th", minBoardPct: 45, officialUrl: "https://www.shivalikcollege.edu.in/", feeSourceUrl: "https://www.shivalikcollege.edu.in/", hostelPerYearInr: 75000, note: "NAAC A+. 10-20% domicile scholarship." },
+  { id: "tulas-dehradun", name: "Tula's Institute", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 134100, approxTotalFeesInr: 536400, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / UKSEE / Direct on 12th", minBoardPct: 50, officialUrl: "https://www.tulas.edu.in/", feeSourceUrl: "https://www.tulas.edu.in/", hostelPerYearInr: 90000, note: "Base CSE ₹1.34L/yr; AI/ML/DS specs +₹25K/yr." },
+  { id: "uttaranchal-u", name: "Uttaranchal University", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 136000, approxTotalFeesInr: 1202000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / UEET / Direct on 12th", minBoardPct: 50, officialUrl: "https://uttaranchaluniversity.ac.in/", feeSourceUrl: "https://uttaranchaluniversity.ac.in/", hostelPerYearInr: 95000, note: "Tuition ₹65K/sem + 5% annual hike. State domicile 25-26% off → ₹5-9L net." },
+  { id: "icfai-dehradun", name: "ICFAI Tech School (ICFAI U Dehradun)", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 480000, approxTotalFeesInr: 480000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / Direct on 12th", minBoardPct: 60, officialUrl: "https://www.iudehradun.edu.in/icfai-tech-school-dehradun/", feeSourceUrl: "https://www.iudehradun.edu.in/icfai-tech-school-dehradun/fee-structure", hostelPerYearInr: 85000, note: "Officially verified: ₹4.8L domicile / ₹5.6L non-domicile + ₹20K admission. Paid in 8 sem installments." },
+  { id: "srhu-dehradun", name: "Himalayan School of Sci & Tech, SRHU", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 135000, approxTotalFeesInr: 1080000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "JEE Main / SRHU entrance / Direct on 12th", minBoardPct: 50, officialUrl: "https://srhu.edu.in/school-of-science-technology/", feeSourceUrl: "https://srhu.edu.in/school-of-science-technology/", hostelPerYearInr: 100000, note: "25% concession for female B.Tech CSE; 26% for Uttarakhand domicile." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — Pan-India well-known (LPU, Chandigarh U, Christ, KIIT, SRM, VIT etc.)
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "lpu", name: "Lovely Professional University (LPU)", city: "Phagwara", state: "Punjab", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 140000, approxTotalFeesInr: 1120000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "LPUNEST (own test)", minBoardPct: 60, officialUrl: "https://www.lpu.in/", feeSourceUrl: "https://www.lpu.in/programmes/engineering/b-tech-computer-science", hostelPerYearInr: 90000, note: "LPUNEST scholarships up to 100% reduce net payable. 60% in 10+2 with PCM." },
+  { id: "chandigarh-u", name: "Chandigarh University", city: "Mohali", state: "Punjab", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 80200, approxTotalFeesInr: 641600, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "CUCET / direct on 12th", minBoardPct: 50, officialUrl: "https://www.cuchd.in/", feeSourceUrl: "https://www.cuchd.in/", hostelPerYearInr: 90000, note: "CUCET scholarships up to 100%. Strong placements." },
+  { id: "christ-u", name: "Christ University (Kengeri)", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 248000, approxTotalFeesInr: 992000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "CUET (Christ) + interview/SOP", minBoardPct: 55, officialUrl: "https://christuniversity.in/", feeSourceUrl: "https://christuniversity.in/", hostelPerYearInr: 90000, note: "Selective intake with interview + SOP. Strong Bangalore brand." },
+  { id: "kiit-bhubaneswar", name: "KIIT (Kalinga Institute)", city: "Bhubaneswar", state: "Odisha", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 462750, approxTotalFeesInr: 1851000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "KIITEE (own test)", minBoardPct: 60, officialUrl: "https://kiit.ac.in/", feeSourceUrl: "https://kiit.ac.in/", hostelPerYearInr: 120000, note: "Uniform fee across B.Tech branches. Strong placement record." },
+  { id: "srm-kattankulathur", name: "SRM IST (Kattankulathur)", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 475000, approxTotalFeesInr: 1900000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "SRMJEEE (own test)", minBoardPct: 50, officialUrl: "https://www.srmist.edu.in/", feeSourceUrl: "https://www.srmist.edu.in/", hostelPerYearInr: 150000, note: "CSE/AI specialisations at the top of fee bands." },
+  { id: "vit-vellore", name: "VIT Vellore", city: "Vellore", state: "Tamil Nadu", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 207000, approxTotalFeesInr: 828000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "VITEEE (own test)", minBoardPct: 60, officialUrl: "https://vit.ac.in/", feeSourceUrl: "https://vit.ac.in/admission/ug/fee-structure", hostelPerYearInr: 150000, note: "VITEEE rank determines fee category (Group A ₹1.73L/yr → Cat 5 ₹6.3L/yr). Shown is mid Group A." },
+  { id: "vit-chennai", name: "VIT Chennai", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 271000, approxTotalFeesInr: 1084000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "VITEEE", minBoardPct: 60, officialUrl: "https://chennai.vit.ac.in/", feeSourceUrl: "https://chennai.vit.ac.in/", hostelPerYearInr: 175000, note: "Group B (CSE) Cat-2 fee; range Cat-1 ₹2.12L to Cat-5 ₹4.34L/yr." },
+  { id: "vit-ap", name: "VIT-AP University", city: "Amaravati", state: "Andhra Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 304000, approxTotalFeesInr: 1216000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "VITEEE", minBoardPct: 60, officialUrl: "https://vitap.ac.in/", feeSourceUrl: "https://vitap.ac.in/", hostelPerYearInr: 150000, note: "Category-based: Cat-1 ₹1.95L to Cat-5 ₹4.90L/yr." },
+  { id: "vit-bhopal", name: "VIT Bhopal University", city: "Bhopal", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 198000, approxTotalFeesInr: 795000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "VITEEE (JEE Main NOT accepted)", minBoardPct: 60, officialUrl: "https://vitbhopal.ac.in/", feeSourceUrl: "https://vitbhopal.ac.in/", hostelPerYearInr: 110000, note: "VITEEE mandatory; fees vary by category. 60% PCM required." },
+  { id: "manipal-jaipur", name: "Manipal University Jaipur", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 487000, approxTotalFeesInr: 1948000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "MET / direct on 12th", minBoardPct: 50, officialUrl: "https://jaipur.manipal.edu/", feeSourceUrl: "https://jaipur.manipal.edu/", hostelPerYearInr: 130000, note: "Manipal brand premium." },
+  { id: "mit-wpu-pune", name: "MIT World Peace University (MIT-WPU)", city: "Pune", state: "Maharashtra", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 410000, approxTotalFeesInr: 1640000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE / MHT-CET / PERA-CET", minBoardPct: 50, officialUrl: "https://mitwpu.edu.in/", feeSourceUrl: "https://mitwpu.edu.in/programme/btech-computer-science-and-engineering", hostelPerYearInr: 150000, note: "Scholarships 25-100% based on entrance percentile." },
+  { id: "sit-pune", name: "Symbiosis Institute of Technology (SIT Pune)", city: "Pune", state: "Maharashtra", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 400000, approxTotalFeesInr: 1600000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "SITEEE (own test)", minBoardPct: 50, officialUrl: "https://www.sitpune.edu.in/", feeSourceUrl: "https://www.sitpune.edu.in/fees-structure", hostelPerYearInr: 120000, note: "Symbiosis brand. Fees may escalate up to 10%/yr." },
+  { id: "gitam", name: "GITAM (Deemed)", city: "Visakhapatnam", state: "Andhra Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 346000, approxTotalFeesInr: 1493000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "GAT (own test)", minBoardPct: 60, officialUrl: "https://www.gitam.edu/", feeSourceUrl: "https://www.gitam.edu/", hostelPerYearInr: 130000, note: "~5%/yr escalation." },
+  { id: "dit-u", name: "DIT University", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 343800, approxTotalFeesInr: 1573000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50, officialUrl: "https://www.dituniversity.edu.in/", feeSourceUrl: "https://www.dituniversity.edu.in/", hostelPerYearInr: 130000, note: "~26% scholarship for Uttarakhand state quota." },
+  { id: "graphic-era", name: "Graphic Era (Deemed)", city: "Dehradun", state: "Uttarakhand", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 191000, approxTotalFeesInr: 1500000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th / JEE", minBoardPct: 60, officialUrl: "https://geu.ac.in/", feeSourceUrl: "https://geu.ac.in/", hostelPerYearInr: 150000, note: "CSE branches fall in higher fee bracket." },
+  { id: "chitkara-u", name: "Chitkara University", city: "Rajpura", state: "Punjab", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 210000, approxTotalFeesInr: 860000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th marks", minBoardPct: 50, officialUrl: "https://www.chitkara.edu.in/", feeSourceUrl: "https://www.chitkara.edu.in/", hostelPerYearInr: 100000, note: "₹20K one-time admission fee. Solid placements." },
+  { id: "gla-mathura", name: "GLA University", city: "Mathura", state: "Uttar Pradesh", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 208000, approxTotalFeesInr: 880000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th / GLAET", minBoardPct: 50, officialUrl: "https://www.gla.ac.in/", feeSourceUrl: "https://www.gla.ac.in/", hostelPerYearInr: 90000, note: "One of the more affordable options in north India." },
+  { id: "reva-u", name: "REVA University", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 350000, approxTotalFeesInr: 1400000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th / KCET / COMEDK / JEE", minBoardPct: 50, officialUrl: "https://www.reva.edu.in/", feeSourceUrl: "https://www.reva.edu.in/", hostelPerYearInr: 110000, note: "Mid-tier Bangalore deemed university." },
+  { id: "jain-u", name: "Jain (Deemed)", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 325000, approxTotalFeesInr: 1300000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "JET / JEE Main / COMEDK / KCET", minBoardPct: 50, officialUrl: "https://www.jainuniversity.ac.in/", feeSourceUrl: "https://www.jainuniversity.ac.in/", hostelPerYearInr: 120000, note: "FET campus at Jakkasandra." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — Rajasthan (Jaipur + smaller cities)
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "mody-u", name: "Mody University of Science & Tech", city: "Lakshmangarh (Sikar)", state: "Rajasthan", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 360000, approxTotalFeesInr: 1440000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "MEET / MUCET / JEE Main", minBoardPct: 50, officialUrl: "https://modyuniversity.ac.in/", feeSourceUrl: "https://modyuniversity.ac.in/", note: "Women-only university. Total ~₹9.35-15.39L by specialization. 100% scholarship for high JEE ranks." },
+  { id: "vgu-jaipur", name: "Vivekananda Global University (VGU)", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 200000, approxTotalFeesInr: 810000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "VGUCET / JEE Main / CUET", minBoardPct: 50, officialUrl: "https://vgu.ac.in/", feeSourceUrl: "https://vgu.ac.in/admission/fee-structure", hostelPerYearInr: 100000, note: "VGUCET registration is free; JEE not required." },
+  { id: "jecrc-u", name: "JECRC University", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 245000, approxTotalFeesInr: 990000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Merit-based (10+2 marks)", minBoardPct: 60, officialUrl: "https://jecrcuniversity.edu.in/", feeSourceUrl: "https://jecrcuniversity.edu.in/fee/", note: "₹10K one-time admission/alumni. 70%+ gets 15% tuition waiver; 85%+ gets 20%." },
+  { id: "poornima-u", name: "Poornima University", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 57500, approxTotalFeesInr: 701500, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Merit-based (10+2)", minBoardPct: 50, officialUrl: "https://poornima.edu.in/", feeSourceUrl: "https://poornima.edu.in/", note: "₹57.5K/sem; specialized tracks (Full Stack, AI/ML+SAS) ₹7.81L." },
+  { id: "uem-jaipur", name: "Univ of Engineering & Management (UEM) Jaipur", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 584000, approxTotalFeesInr: 584000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "IEMJEE / JEE Main", minBoardPct: 45, officialUrl: "https://uem.edu.in/uem-jaipur/", feeSourceUrl: "https://uem.edu.in/uem-jaipur/", note: "CSE+Data Science (SAS collab) up to ₹1L/sem." },
+  { id: "sangam-u", name: "Sangam University", city: "Bhilwara", state: "Rajasthan", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 105000, approxTotalFeesInr: 420000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Merit / REAP counselling", minBoardPct: 50, officialUrl: "https://www.sangamuniversity.ac.in/", feeSourceUrl: "https://www.sangamuniversity.ac.in/", note: "Total ranges ₹1.84-5.22L by branch/category." },
+  { id: "sgvu-jaipur", name: "Suresh Gyan Vihar University (SGVU)", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 160000, approxTotalFeesInr: 640000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Merit-based", minBoardPct: 50, officialUrl: "https://www.gyanvihar.org/", feeSourceUrl: "https://www.gyanvihar.org/", hostelPerYearInr: 70000, note: "Annual ₹1.2-1.5L by specialization." },
+  { id: "amity-jaipur", name: "Amity University Rajasthan", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 167000, approxTotalFeesInr: 1336000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "Amity JEE / AMCAT / JEE / state exam", minBoardPct: 60, officialUrl: "https://www.amity.edu/jaipur/", feeSourceUrl: "https://www.amity.edu/jaipur/", hostelPerYearInr: 75000, note: "1st semester ₹1.67L; total ₹13.36L." },
+  { id: "career-point-kota", name: "Career Point University", city: "Kota", state: "Rajasthan", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 523000, approxTotalFeesInr: 523000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Merit-based (10+2)", minBoardPct: 50, officialUrl: "https://www.cpuniverse.in/", feeSourceUrl: "https://www.cpuniverse.in/", note: "Tuition ₹4.32L over 4 yrs." },
+  { id: "pacific-udaipur", name: "Pacific University", city: "Udaipur", state: "Rajasthan", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 317000, approxTotalFeesInr: 317000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "REAP / Merit / JEE Main", minBoardPct: 50, officialUrl: "https://pacific-university.ac.in/", feeSourceUrl: "https://pacific-university.ac.in/", note: "One of the cheapest options. ₹1500 application fee." },
+  { id: "apex-jaipur", name: "Apex University", city: "Jaipur", state: "Rajasthan", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 120000, approxTotalFeesInr: 480000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "AUCET / Merit-based", minBoardPct: 50, officialUrl: "https://www.apexuniversity.co.in/", feeSourceUrl: "https://www.apexuniversity.co.in/", note: "Scholarships up to ₹10L for meritorious." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — MP + UP smaller cities (Indore, Bhopal, Gwalior, Bareilly, Lucknow, Moradabad)
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "medicaps-indore", name: "Medi-Caps University", city: "Indore", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 185000, approxTotalFeesInr: 840000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "MU-SAT / JEE Main / direct on 12th", minBoardPct: 45, officialUrl: "https://www.medicaps.ac.in/", feeSourceUrl: "https://www.medicaps.ac.in/", hostelPerYearInr: 95000, note: "JEE Main not mandatory. ~₹8.4L for 2025 cohort." },
+  { id: "aitr-indore", name: "Acropolis Institute (AITR)", city: "Indore", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 167200, approxTotalFeesInr: 668800, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main via DTE MP; mgmt quota direct", minBoardPct: 45, officialUrl: "https://aitr.ac.in/", feeSourceUrl: "https://aitr.ac.in/", hostelPerYearInr: 80000, note: "DTE MP via JEE Main; management quota seats available." },
+  { id: "sage-indore", name: "SAGE University Indore", city: "Indore", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 135000, approxTotalFeesInr: 583000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "SEE / 50% in 12th direct", minBoardPct: 45, officialUrl: "https://sageuniversity.edu.in/", feeSourceUrl: "https://sageuniversity.edu.in/", hostelPerYearInr: 70000, note: "Direct admission with 50% in 12th PCM." },
+  { id: "renaissance-indore", name: "Renaissance University", city: "Indore", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 100000, approxTotalFeesInr: 320000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Merit-based on 10+2", minBoardPct: 45, officialUrl: "https://renaissance.ac.in/", feeSourceUrl: "https://renaissance.ac.in/", hostelPerYearInr: 60000, note: "UGC + AICTE approved; admission purely on 12th merit." },
+  { id: "lnct-bhopal", name: "LNCT University", city: "Bhopal", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 130000, approxTotalFeesInr: 520000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "LNCT-CET / direct 12th / JEE Main", minBoardPct: 60, officialUrl: "https://www.lnctu.ac.in/", feeSourceUrl: "https://www.lnctu.ac.in/", hostelPerYearInr: 80000, note: "Multiple admission paths." },
+  { id: "sirt-bhopal", name: "Sagar Institute of R&T (SIRT)", city: "Bhopal", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 109000, approxTotalFeesInr: 436000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main via DTE MP; mgmt quota direct", minBoardPct: 50, officialUrl: "https://www.sirtbhopal.ac.in/", feeSourceUrl: "https://www.sirtbhopal.ac.in/", hostelPerYearInr: 60000, note: "Management/direct seats available without JEE." },
+  { id: "oist-bhopal", name: "Oriental Inst of Sci & Tech (OIST)", city: "Bhopal", state: "Madhya Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 120000, approxTotalFeesInr: 478000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "JEE Main via MP DTE; mgmt quota direct", minBoardPct: 50, officialUrl: "https://www.oistbpl.ac.in/", feeSourceUrl: "https://www.oistbpl.ac.in/", hostelPerYearInr: 65000, note: "~80% students get scholarships." },
+  { id: "itm-gwalior", name: "ITM University Gwalior", city: "Gwalior", state: "Madhya Pradesh", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 175000, approxTotalFeesInr: 700000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "ITM NEST / direct on 12th", minBoardPct: 50, officialUrl: "https://itmuniversity.ac.in/", feeSourceUrl: "https://itmuniversity.ac.in/", hostelPerYearInr: 90000, note: "Merit discounts 5-25%." },
+  { id: "amity-lucknow", name: "Amity University Lucknow", city: "Lucknow", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 384000, approxTotalFeesInr: 1536000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "Amity AMCAT / JEE / CUET / direct", minBoardPct: 60, officialUrl: "https://www.amity.edu/lucknow/", feeSourceUrl: "https://www.amity.edu/lucknow/", hostelPerYearInr: 150000, note: "Premium private. JEE not mandatory." },
+  { id: "invertis-bareilly", name: "Invertis University", city: "Bareilly", state: "Uttar Pradesh", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 100000, approxTotalFeesInr: 430000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "IUCET / direct on 12th / JEE / CUET", minBoardPct: 50, officialUrl: "https://www.invertisuniversity.ac.in/", feeSourceUrl: "https://www.invertisuniversity.ac.in/ug-programmes/btech-in-cse", hostelPerYearInr: 75000, note: "Verified officially: Y1 ₹1.00L → Y4 ₹1.15L. 50% in 12th PCM (45% SC/ST)." },
+  { id: "srmu-lucknow", name: "Shri Ramswaroop Memorial Univ (SRMU)", city: "Lucknow", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 170000, approxTotalFeesInr: 605000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "SRMUSET / JEE Main / merit", minBoardPct: 50, officialUrl: "https://srmu.ac.in/", feeSourceUrl: "https://srmu.ac.in/program-finder", hostelPerYearInr: 85000, note: "Verified officially: ~₹1.7L/yr for CSE & AI/ML/Cyber/DS branches." },
+  { id: "iftm-moradabad", name: "IFTM University", city: "Moradabad", state: "Uttar Pradesh", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 92000, approxTotalFeesInr: 408000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th / JEE Main", minBoardPct: 50, officialUrl: "https://iftmuniversity.ac.in/", feeSourceUrl: "https://iftmuniversity.ac.in/", hostelPerYearInr: 45000, note: "Hostel ₹45K/yr incl. meals. 50% fee waiver for 90%+ scorers. ⚠ verify AICTE approval directly." },
+  { id: "bbd-lucknow", name: "BBD University (Babu Banarasi Das)", city: "Lucknow", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 143000, approxTotalFeesInr: 572000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE Main primary; UPSEE / own merit channel", minBoardPct: 50, officialUrl: "https://www.bbdu.ac.in/", feeSourceUrl: "https://www.bbdu.ac.in/", hostelPerYearInr: 90000, note: "JEE-heavy; up to 100% scholarship for 90%+ in 12th." },
+  { id: "integral-lucknow", name: "Integral University", city: "Lucknow", state: "Uttar Pradesh", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 140000, approxTotalFeesInr: 555000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "IUET / JEE Main; ~15% direct seats", minBoardPct: 50, officialUrl: "https://iul.ac.in/", feeSourceUrl: "https://iul.ac.in/", hostelPerYearInr: 70000, note: "Y1 ₹1.40L, Y2+ ₹1.35L." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — Punjab + Haryana smaller cities
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "srm-sonepat", name: "SRM University Delhi-NCR Sonepat", city: "Sonipat", state: "Haryana", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 250000, approxTotalFeesInr: 1289000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "SRMHCAT / JEE Main / SRMJEEE / IPU CET / SAT", minBoardPct: 50, officialUrl: "https://www.srmuniversity.ac.in/", feeSourceUrl: "https://www.srmuniversity.ac.in/", hostelPerYearInr: 185000, note: "Scholarships 10-100% based on Class 12 / SRMJEE." },
+  { id: "mmu-mullana", name: "MM (Deemed) University, Mullana", city: "Mullana (Ambala)", state: "Haryana", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 160000, approxTotalFeesInr: 640000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "MM-EEE / JEE Main / direct", minBoardPct: 50, officialUrl: "https://www.mmumullana.org/", feeSourceUrl: "https://www.mmumullana.org/", hostelPerYearInr: 90000, note: "Total ₹5.18-7.05L range. Fee ~7%/yr." },
+  { id: "cgc-landran", name: "Chandigarh Group of Colleges (CGC) Landran", city: "Landran (Mohali)", state: "Punjab", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 168000, approxTotalFeesInr: 673000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE Main / PSET / direct merit", minBoardPct: 45, officialUrl: "https://www.cgc.edu.in/", feeSourceUrl: "https://www.cgc.edu.in/", hostelPerYearInr: 80000, note: "PTU Jalandhar counselling also accepted." },
+  { id: "geeta-panipat", name: "Geeta University", city: "Panipat", state: "Haryana", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 158000, approxTotalFeesInr: 760000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "GUTS / JEE Main / direct merit", minBoardPct: 50, officialUrl: "https://geetauniversity.edu.in/", feeSourceUrl: "https://geetauniversity.edu.in/", hostelPerYearInr: 90000, note: "₹79K/sem. Up to 100% scholarship via GUTS." },
+  { id: "dav-jalandhar", name: "DAV University, Jalandhar", city: "Jalandhar", state: "Punjab", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 130000, approxTotalFeesInr: 514000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "DAVUET (own entrance)", minBoardPct: 45, officialUrl: "https://www.davuniversity.org/", feeSourceUrl: "https://www.davuniversity.org/", hostelPerYearInr: 75000, note: "Y1 ₹1.36L, Y2-4 ₹1.26L. 50% tuition waiver for >=80% in 12th." },
+  { id: "rayat-bahra", name: "Rayat Bahra University, Mohali", city: "Mohali", state: "Punjab", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 160000, approxTotalFeesInr: 640000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct merit / CUET / JEE", minBoardPct: 45, officialUrl: "https://rayatbahrauniversity.edu.in/", feeSourceUrl: "https://rayatbahrauniversity.edu.in/", hostelPerYearInr: 80000, note: "Core CSE ₹1.6L/yr; Cyber Security spec ₹6.4L total." },
+  { id: "desh-bhagat", name: "Desh Bhagat University", city: "Mandi Gobindgarh", state: "Punjab", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 100000, approxTotalFeesInr: 400000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 12th PCM", minBoardPct: 50, officialUrl: "https://deshbhagatuniversity.in/", feeSourceUrl: "https://deshbhagatuniversity.in/", hostelPerYearInr: 60000, note: "Among the cheapest at ~₹1L/yr tuition." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — Maharashtra + Gujarat
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "dypiu-pune", name: "D Y Patil International University", city: "Pune", state: "Maharashtra", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 260000, approxTotalFeesInr: 1040000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "DYPIU-ET", minBoardPct: 50, officialUrl: "https://dypiu.ac.in/", feeSourceUrl: "https://www.dypiu.ac.in/national-admissions/fees", note: "₹1.3L/sem. ₹2,500/sem reg + ₹10K caution. JEE Main not required." },
+  { id: "bvp-pune", name: "Bharati Vidyapeeth Deemed Univ College of Engg", city: "Pune", state: "Maharashtra", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 290000, approxTotalFeesInr: 1166000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "BVP CET", minBoardPct: 50, officialUrl: "https://bharatividyapeeth.edu/", feeSourceUrl: "https://bharatividyapeeth.edu/", note: "Total ₹11.66L. First year ₹2.96L." },
+  { id: "sandip-nashik", name: "Sandip University", city: "Nashik", state: "Maharashtra", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 180000, approxTotalFeesInr: 720000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "SUJEE / direct merit", minBoardPct: 50, officialUrl: "https://www.sandipuniversity.edu.in/", feeSourceUrl: "https://www.sandipuniversity.edu.in/fees-structure.php", hostelPerYearInr: 110000, note: "Tuition ₹1.7L + special fees ₹10K. AI/ML/Cyber tracks ₹1.95L-2.85L/yr." },
+  { id: "adypu-pune", name: "Ajeenkya DY Patil University (ADYPU)", city: "Pune", state: "Maharashtra", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 325000, approxTotalFeesInr: 1300000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "ADYPU All India CET", minBoardPct: 50, officialUrl: "https://adypu.edu.in/", feeSourceUrl: "https://adypu.edu.in/", note: "Total ~₹13L. Online proctored test." },
+  { id: "marwadi-rajkot", name: "Marwadi University", city: "Rajkot", state: "Gujarat", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 140000, approxTotalFeesInr: 571000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "JEE/GUJCET via ACPC or direct (mgmt quota)", minBoardPct: 45, officialUrl: "https://www.marwadiuniversity.ac.in/", feeSourceUrl: "https://www.marwadiuniversity.ac.in/", hostelPerYearInr: 73000, note: "Hostel 8-bed non-AC ₹73K/yr; AC 2/3-bed up to ₹1.58L/yr." },
+  { id: "parul-vadodara", name: "Parul University", city: "Vadodara", state: "Gujarat", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 175000, approxTotalFeesInr: 604000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "PUEET / JEE / state exam", minBoardPct: 45, officialUrl: "https://paruluniversity.ac.in/", feeSourceUrl: "https://paruluniversity.ac.in/", note: "50% entrance + 50% Class 12 merit." },
+  { id: "indus-u", name: "Indus University", city: "Ahmedabad", state: "Gujarat", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 111000, approxTotalFeesInr: 461000, durationYears: 4, admissionMode: "jee_main_or_direct", mainEntranceExam: "GUJCET / JEE Main (ACPC) or direct merit", minBoardPct: 45, officialUrl: "https://indusuni.ac.in/", feeSourceUrl: "https://indusuni.ac.in/", hostelPerYearInr: 138000, note: "Total ₹4.61L. Mainly ACPC; mgmt/direct seats also." },
+  { id: "atmiya-rajkot", name: "Atmiya University", city: "Rajkot", state: "Gujarat", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 86000, approxTotalFeesInr: 343000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Merit-based (12th) / JEE Main / CMAT", minBoardPct: 45, officialUrl: "https://atmiyauni.ac.in/", feeSourceUrl: "https://atmiyauni.ac.in/", note: "Cheapest in Gujarat. Scholarships for >70% in 12th." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — Karnataka (Bangalore + Mangalore/Nitte)
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "new-horizon", name: "New Horizon College of Engineering", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 350000, approxTotalFeesInr: 1500000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (mgmt quota also)", minBoardPct: 45, officialUrl: "https://newhorizonindia.edu/", feeSourceUrl: "https://newhorizonindia.edu/", hostelPerYearInr: 150000, note: "VTU. CSE mgmt quota ~₹3.5L/yr tuition + ₹5.5L dev fee." },
+  { id: "bmsit", name: "BMS Institute of Tech & Mgmt (BMSIT)", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 317000, approxTotalFeesInr: 1608000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (25% mgmt quota)", minBoardPct: 60, officialUrl: "https://bmsit.ac.in/", feeSourceUrl: "https://bmsit.ac.in/", hostelPerYearInr: 130000, note: "VTU. COMEDK CSE ₹3.17L/yr. Mgmt quota needs 60% in Class 12." },
+  { id: "bmsce", name: "BMS College of Engineering", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 221960, approxTotalFeesInr: 900000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (5% mgmt quota)", minBoardPct: 45, officialUrl: "https://www.bmsce.ac.in/", feeSourceUrl: "https://www.bmsce.ac.in/", hostelPerYearInr: 120000, note: "Autonomous, VTU. COMEDK CSE ~₹2.22L/yr. Mgmt quota CSE ₹12-18L total incl. donation." },
+  { id: "pes-u", name: "PES University", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 450000, approxTotalFeesInr: 1800000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "KCET / JEE Main (PESSAT discontinued 2025)", minBoardPct: 60, officialUrl: "https://pes.edu/", feeSourceUrl: "https://pes.edu/admissions/fee-details/", hostelPerYearInr: 140000, note: "Non-KCET seats now via JEE Main score. Mgmt quota ₹10-12L/yr." },
+  { id: "dsce", name: "Dayananda Sagar College of Engg", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 235000, approxTotalFeesInr: 1050000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (mgmt quota also)", minBoardPct: 45, officialUrl: "https://www.dayanandasagar.edu/dsce/", feeSourceUrl: "https://www.dayanandasagar.edu/dsce/", hostelPerYearInr: 150000, note: "VTU, autonomous. Mgmt quota total ₹19-22L." },
+  { id: "msrit", name: "MS Ramaiah Institute of Technology (MSRIT)", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 300000, approxTotalFeesInr: 1204000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (25% mgmt quota)", minBoardPct: 45, officialUrl: "https://www.msrit.edu/", feeSourceUrl: "https://www.msrit.edu/", hostelPerYearInr: 150000, note: "VTU autonomous. COMEDK CSE ₹2.8-3.0L/yr. Mgmt quota CSE ₹49-51L total." },
+  { id: "rvce", name: "RV College of Engineering (RVCE)", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 290000, approxTotalFeesInr: 1160000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (mgmt quota)", minBoardPct: 45, officialUrl: "https://www.rvce.edu.in/", feeSourceUrl: "https://www.rvce.edu.in/", hostelPerYearInr: 150000, note: "Top VTU autonomous; very competitive. Mgmt quota CSE ₹50-72L." },
+  { id: "presidency-bangalore", name: "Presidency University", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 355000, approxTotalFeesInr: 1420000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "Direct on 10+2 / KCET / JEE / PUEET", minBoardPct: 50, officialUrl: "https://presidencyuniversity.in/", feeSourceUrl: "https://presidencyuniversity.in/", hostelPerYearInr: 150000, note: "Accepts 10+2 merit directly. Total ~₹14.2L." },
+  { id: "sahyadri-mangalore", name: "Sahyadri College of Engg & Mgmt", city: "Mangalore", state: "Karnataka", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 305000, approxTotalFeesInr: 1220000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (mgmt quota)", minBoardPct: 45, officialUrl: "https://sahyadri.edu.in/", feeSourceUrl: "https://sahyadri.edu.in/", hostelPerYearInr: 120000, note: "VTU. Total BE ~₹12.2L for 2025-26." },
+  { id: "nmamit", name: "NMAM Institute of Technology", city: "Nitte (Udupi)", state: "Karnataka", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 380000, approxTotalFeesInr: 1522000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET / NUCAT", minBoardPct: 45, officialUrl: "https://nmamit.nitte.edu.in/", feeSourceUrl: "https://nmamit.nitte.edu.in/", hostelPerYearInr: 100000, note: "Now under NITTE Deemed-to-be Univ. COMEDK CSE: Y1 ₹3.88L, Y2-4 ₹3.78L." },
+  { id: "alliance-u", name: "Alliance University", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 450000, approxTotalFeesInr: 1800000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "AUEET (own exam) / JEE Main / direct", minBoardPct: 50, officialUrl: "https://www.alliance.edu.in/", feeSourceUrl: "https://www.alliance.edu.in/", hostelPerYearInr: 200000, note: "Scholarship up to ₹2L for top AUEET scorers." },
+  { id: "cmrit", name: "CMR Institute of Technology (CMRIT)", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 301000, approxTotalFeesInr: 1204000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (mgmt quota)", minBoardPct: 45, officialUrl: "https://www.cmrit.ac.in/", feeSourceUrl: "https://www.cmrit.ac.in/", hostelPerYearInr: 120000, note: "VTU autonomous. COMEDK CSE ₹1.75-2.62L/yr." },
+  { id: "cmr-u", name: "CMR University", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 250000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "CMRUAT / KCET / COMEDK / JEE", minBoardPct: 45, officialUrl: "https://www.cmr.edu.in/", feeSourceUrl: "https://cmr.edu.in/wp-content/uploads/2025/03/V5-AY-2025-26-Fee-for-WEBSITE.pdf", hostelPerYearInr: 150000, note: "Direct via CMRUAT — no JEE needed. ₹2.25-2.75L/yr." },
+  { id: "east-point", name: "East Point College of Engg & Tech", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 238000, approxTotalFeesInr: 1427000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (mgmt quota)", minBoardPct: 45, officialUrl: "https://www.eastpoint.ac.in/", feeSourceUrl: "https://www.eastpoint.ac.in/", hostelPerYearInr: 60000, note: "VTU, NAAC A. COMEDK CSE ~₹2.06L/yr." },
+  { id: "tjit", name: "T. John Institute of Technology", city: "Bangalore", state: "Karnataka", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 229000, approxTotalFeesInr: 916000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "COMEDK / KCET (mgmt quota)", minBoardPct: 45, officialUrl: "https://www.tjit.ac.in/", feeSourceUrl: "https://www.tjit.ac.in/", hostelPerYearInr: 100000, note: "VTU. Mgmt quota Y1 ₹5L then ₹2L/yr. Merit scholarship for 80%+/90%+." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — Tamil Nadu / AP / Telangana
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "sathyabama", name: "Sathyabama Inst of Sci & Tech", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 200000, approxTotalFeesInr: 800000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "SAEEE (own entrance)", minBoardPct: 50, officialUrl: "https://www.sathyabama.ac.in/", feeSourceUrl: "https://www.sathyabama.ac.in/", hostelPerYearInr: 125000, note: "CSE first-year ~₹4L (specialization), regular tier ~₹1.5-3.55L/yr." },
+  { id: "veltech", name: "Vel Tech R&D Institute", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 310000, approxTotalFeesInr: 1240000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "VTUEEE (optional); direct admission too", minBoardPct: 60, officialUrl: "https://veltech.edu.in/", feeSourceUrl: "https://veltech.edu.in/fee-structure/", hostelPerYearInr: 125000, note: "Direct with 60% PCM in 10+2; VTUEEE optional." },
+  { id: "saveetha-engg", name: "Saveetha Engineering College", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 250000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "TNEA / Mgmt quota", minBoardPct: 50, officialUrl: "https://www.saveetha.in/", feeSourceUrl: "https://www.saveetha.in/", hostelPerYearInr: 100000, note: "Govt-quota tuition via TNEA ~₹50-55K/yr; mgmt quota ~₹2.5L/yr." },
+  { id: "hits-chennai", name: "Hindustan Inst of Tech & Sci (HITS)", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 229500, approxTotalFeesInr: 920000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "HITSEEE", minBoardPct: 50, officialUrl: "https://hindustanuniv.ac.in/", feeSourceUrl: "https://hindustanuniv.ac.in/", hostelPerYearInr: 120000, note: "50% PCM + 60% Maths in Class 12." },
+  { id: "crescent-chennai", name: "BS Abdur Rahman Crescent Inst", city: "Chennai", state: "Tamil Nadu", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 200000, approxTotalFeesInr: 800000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "CIEAT / JEE Main", minBoardPct: 50, officialUrl: "https://crescent.education/", feeSourceUrl: "https://crescent.education/", hostelPerYearInr: 100000, note: "JEE Main exemption from CIEAT possible." },
+  { id: "karunya-coimbatore", name: "Karunya Inst of Tech & Sciences", city: "Coimbatore", state: "Tamil Nadu", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 293000, approxTotalFeesInr: 1172000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "KEE (Karunya Entrance Exam)", minBoardPct: 60, officialUrl: "https://www.karunya.edu/", feeSourceUrl: "https://www.karunya.edu/", hostelPerYearInr: 90000, note: "Merit scholarships up to ₹1.2L/yr." },
+  { id: "karpagam", name: "Karpagam Academy of Higher Education", city: "Coimbatore", state: "Tamil Nadu", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 70000, approxTotalFeesInr: 280000, durationYears: 4, admissionMode: "direct", mainEntranceExam: "KEEE (often waived for direct)", minBoardPct: 50, officialUrl: "https://kahedu.edu.in/", feeSourceUrl: "https://kahedu.edu.in/", hostelPerYearInr: 75000, note: "₹35K/sem (₹70K/yr) — one of cheapest private deemed options." },
+  { id: "amrita-coimbatore", name: "Amrita Vishwa Vidyapeetham (Coimbatore)", city: "Coimbatore", state: "Tamil Nadu", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 325000, approxTotalFeesInr: 1300000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "AEEE / JEE Main", minBoardPct: 60, officialUrl: "https://www.amrita.edu/", feeSourceUrl: "https://aeee.amrita.edu/", hostelPerYearInr: 110000, note: "AEEE own exam or JEE Main score." },
+  { id: "mahindra-u", name: "Mahindra University", city: "Hyderabad", state: "Telangana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 500000, approxTotalFeesInr: 2000000, durationYears: 4, admissionMode: "jee_main", mainEntranceExam: "JEE Main (90+ percentile) or SAT (1400+)", minBoardPct: 60, officialUrl: "https://www.mahindrauniversity.edu.in/", feeSourceUrl: "https://www.mahindrauniversity.edu.in/programs/b-tech/fee-structure/", hostelPerYearInr: 170000, note: "⚠ CSE specifically needs 90+ percentile JEE Main or 1400 SAT. Mandatory hostel ₹1.7L." },
+  { id: "mgit", name: "Mahatma Gandhi Inst of Tech (MGIT)", city: "Hyderabad", state: "Telangana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 140000, approxTotalFeesInr: 560000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "TS EAPCET (convener) / Mgmt quota", minBoardPct: 50, officialUrl: "https://mgit.ac.in/", feeSourceUrl: "https://mgit.ac.in/fee-structure/", hostelPerYearInr: 90000, note: "Mgmt/NRI quota allows direct admission at ~₹1.4-2L/yr." },
+  { id: "vasavi", name: "Vasavi College of Engineering", city: "Hyderabad", state: "Telangana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 250000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "TS EAPCET / Mgmt quota", minBoardPct: 50, officialUrl: "https://www.vce.ac.in/", feeSourceUrl: "https://www.vce.ac.in/", hostelPerYearInr: 90000, note: "Convener ~₹1.4L/yr; mgmt-quota CSE ~₹2.5L/yr (30% of seats)." },
+  { id: "cbit", name: "Chaitanya Bharathi Inst of Tech (CBIT)", city: "Hyderabad", state: "Telangana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 250000, approxTotalFeesInr: 1000000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "TS EAPCET / Mgmt quota", minBoardPct: 50, officialUrl: "https://www.cbit.ac.in/", feeSourceUrl: "https://www.cbit.ac.in/", hostelPerYearInr: 55000, note: "Autonomous. Mgmt-quota CSE ~₹2.5L/yr (~₹10L total)." },
+  { id: "ifhe-hyderabad", name: "ICFAI Foundation for Higher Ed (IFHE)", city: "Hyderabad", state: "Telangana", cityTier: 1, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 280000, approxTotalFeesInr: 1120000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "ATIT (IcfaiTech own entrance)", minBoardPct: 60, officialUrl: "https://www.ifheindia.org/", feeSourceUrl: "https://www.ifheindia.org/icfaitech-school-hyderabad/icfaitech/ugprograms/btech", hostelPerYearInr: 90000, note: "Merit scholarship up to 100% sem-1 fee for >=95%." },
+
+  // ════════════════════════════════════════════════════════════════════════
+  //  PRIVATE — West Bengal + Odisha + Himachal Pradesh + Assam
+  // ════════════════════════════════════════════════════════════════════════
+  { id: "heritage-kolkata", name: "Heritage Institute of Technology", city: "Kolkata", state: "West Bengal", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 205400, approxTotalFeesInr: 821600, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "WBJEE / JEE Main", minBoardPct: 45, officialUrl: "https://www.heritageit.edu/", feeSourceUrl: "https://www.heritageit.edu/PDF/BTech_2025_2026.pdf", hostelPerYearInr: 90000, note: "MAKAUT-autonomous. ~₹1.03L/sem for 2025-26." },
+  { id: "adamas-kolkata", name: "Adamas University", city: "Kolkata", state: "West Bengal", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 90000, approxTotalFeesInr: 765000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "AUAT / WBJEE / JEE Main", minBoardPct: 60, officialUrl: "https://adamasuniversity.ac.in/", feeSourceUrl: "https://adamasuniversity.ac.in/", hostelPerYearInr: 110000, note: "Min 60% Class 12 PCM. Merit scholarships." },
+  { id: "snu-kolkata", name: "Sister Nivedita University", city: "Kolkata", state: "West Bengal", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 903000, approxTotalFeesInr: 903000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "SNUET / WBJEE / JEE Main", minBoardPct: 50, officialUrl: "https://snuniv.ac.in/", feeSourceUrl: "https://snuniv.ac.in/", hostelPerYearInr: 90000, note: "PCM required." },
+  { id: "brainware-kolkata", name: "Brainware University", city: "Kolkata", state: "West Bengal", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 58700, approxTotalFeesInr: 579600, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "BET / WBJEE / JEE Main", minBoardPct: 55, officialUrl: "https://www.brainwareuniversity.ac.in/", feeSourceUrl: "https://www.brainwareuniversity.ac.in/degree-programmes/btech-cse.php", hostelPerYearInr: 70000, note: "60% Class 10 + 55% Class 12 with Maths/Physics." },
+  { id: "iem-kolkata", name: "Inst of Engg & Mgmt (IEM)", city: "Kolkata", state: "West Bengal", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 945000, approxTotalFeesInr: 945000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "IEMJEE (WBJEE discontinued)", minBoardPct: 60, officialUrl: "https://iem.edu.in/", feeSourceUrl: "https://iem.edu.in/", hostelPerYearInr: 100000, note: "First installment ₹1.4L then 7 × ₹1.15L. All B.Tech via IEMJEE now." },
+  { id: "tiu-kolkata", name: "Techno India University", city: "Kolkata", state: "West Bengal", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 81000, approxTotalFeesInr: 632000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "WBJEE / JEE Main / TIU Entrance", minBoardPct: 45, officialUrl: "https://technoindiauniversity.ac.in/", feeSourceUrl: "https://technoindiauniversity.ac.in/", hostelPerYearInr: 90000, note: "Min 45% PCM/PCB at Class 12." },
+  { id: "stcet-kolkata", name: "St. Thomas' College of Engg & Tech", city: "Kolkata", state: "West Bengal", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 134000, approxTotalFeesInr: 536000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "WBJEE / JEE Main", minBoardPct: 45, officialUrl: "https://stcet.ac.in/", feeSourceUrl: "https://stcet.ac.in/", hostelPerYearInr: 70000, note: "MAKAUT. First year ₹1.53-1.60L." },
+  { id: "cvr-global", name: "C.V. Raman Global University", city: "Bhubaneswar", state: "Odisha", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_semester", feePeriodAmountInr: 150000, approxTotalFeesInr: 1200000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "CGUEE / JEE Main / OJEE", minBoardPct: 60, officialUrl: "https://cgu-odisha.ac.in/", feeSourceUrl: "https://cgu-odisha.ac.in/fee-structure/", hostelPerYearInr: 100000, note: "₹1.5L/sem. Counselling Fee ₹5K + Registration ₹3K/sem." },
+  { id: "centurion-u", name: "Centurion University of Tech & Mgmt", city: "Bhubaneswar", state: "Odisha", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 170000, approxTotalFeesInr: 788000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "CUEE / JEE Main", minBoardPct: 50, officialUrl: "https://cutm.ac.in/", feeSourceUrl: "https://cutm.ac.in/admission-process/", hostelPerYearInr: 80000, note: "Selection: 70% CUEE + 20% Class 12 + 10% interview." },
+  { id: "trident-bhubaneswar", name: "Trident Academy of Technology", city: "Bhubaneswar", state: "Odisha", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 100000, approxTotalFeesInr: 400000, durationYears: 4, admissionMode: "state_exam", mainEntranceExam: "OJEE / JEE Main", minBoardPct: 45, officialUrl: "https://tat.ac.in/", feeSourceUrl: "https://tat.ac.in/", hostelPerYearInr: 67000, note: "BPUT Odisha. Cheaper private option." },
+  { id: "soa", name: "Siksha 'O' Anusandhan (SOA)", city: "Bhubaneswar", state: "Odisha", cityTier: 2, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 1180000, approxTotalFeesInr: 1180000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "SAAT / JEE Main", minBoardPct: 60, officialUrl: "https://www.soa.ac.in/", feeSourceUrl: "https://www.soa.ac.in/", hostelPerYearInr: 110000, note: "60% Class 12 (50% SC/ST/OBC) with min 50% Physics + Maths." },
+  { id: "shoolini-solan", name: "Shoolini University", city: "Solan", state: "Himachal Pradesh", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 248000, approxTotalFeesInr: 992000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "Shoolini SUAT / CUET / JEE Main / HPCET", minBoardPct: 60, officialUrl: "https://shooliniuniversity.com/", feeSourceUrl: "https://shooliniuniversity.com/", hostelPerYearInr: 143000, note: "60% PCM in 12th. Hostel ~₹5.75L over 4 yrs." },
+  { id: "bahra-u", name: "Bahra University", city: "Shimla", state: "Himachal Pradesh", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 160000, approxTotalFeesInr: 640000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "BU-SET / JEE Main", minBoardPct: 50, officialUrl: "https://bahrauniversity.edu.in/", feeSourceUrl: "https://bahrauniversity.edu.in/", hostelPerYearInr: 80000, note: "Min 50% Class 12 PCM." },
+  { id: "don-bosco-assam", name: "Assam Don Bosco University", city: "Guwahati", state: "Assam", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "per_year", feePeriodAmountInr: 135000, approxTotalFeesInr: 542000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "ADBU Entrance / JEE Main / Assam CEE", minBoardPct: 50, officialUrl: "https://www.dbuniversity.ac.in/", feeSourceUrl: "https://www.dbuniversity.ac.in/", hostelPerYearInr: 75000, note: "Min 50% Class 12 PCM. Own entrance + interview." },
+  { id: "royal-global", name: "Assam Royal Global University", city: "Guwahati", state: "Assam", cityTier: 3, type: "private", courseFocus: "engineering", program: "B.Tech CSE", feePeriod: "full_course", feePeriodAmountInr: 800000, approxTotalFeesInr: 800000, durationYears: 4, admissionMode: "private_exam", mainEntranceExam: "R-JEE / JEE Main / Assam CEE", minBoardPct: 50, officialUrl: "https://www.rgu.ac/", feeSourceUrl: "https://www.rgu.ac/", hostelPerYearInr: 80000, note: "Scholarships up to 100%." },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -824,7 +327,7 @@ export const ADMISSION_MODE_LABELS: Record<AdmissionMode, string> = {
   other: "Other",
 };
 
-/** Admission modes that do NOT require JEE Main */
+/** Admission modes that do NOT require JEE Main rank */
 export const NO_JEE_MAIN_MODES: AdmissionMode[] = [
   "direct",
   "private_exam",
