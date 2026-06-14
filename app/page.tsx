@@ -1,13 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { computeLoan, fmtINR, fmtINRPrecise, fmtMonths, type LoanInput } from "@/lib/loan";
 import { BANKS } from "@/lib/banks";
 import { YearlyChart } from "@/components/YearlyChart";
 import { PrincipalVsInterest } from "@/components/PrincipalVsInterest";
 
 export default function CalculatorPage() {
+  // useSearchParams() requires a Suspense boundary at build time, so wrap the
+  // inner component that calls it.
+  return (
+    <Suspense fallback={<div className="max-w-5xl mx-auto px-4 sm:px-6 py-10" />}>
+      <CalculatorInner />
+    </Suspense>
+  );
+}
+
+function CalculatorInner() {
+  const searchParams = useSearchParams();
   const [fees, setFees] = useState(15_00_000);
   const [loanAmount, setLoanAmount] = useState(15_00_000);
   const [courseYears, setCourseYears] = useState(4);
@@ -18,6 +30,19 @@ export default function CalculatorPage() {
   const [payInterestDuringMoratorium, setPayInterestDuringMoratorium] = useState(false);
   const [taxSlab, setTaxSlab] = useState(30);
   const [showFullSchedule, setShowFullSchedule] = useState(false);
+
+  // Read URL params on mount: e.g. /?fees=2100000&loan=2100000&course=2
+  // Lets the /colleges page link directly to a prefilled calculator.
+  useEffect(() => {
+    if (!searchParams) return;
+    const f = Number(searchParams.get("fees"));
+    const l = Number(searchParams.get("loan"));
+    const c = Number(searchParams.get("course"));
+    if (f && f > 0) setFees(f);
+    if (l && l > 0) setLoanAmount(l);
+    if (c && c >= 1 && c <= 6) setCourseYears(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onFeesChange = (next: number) => {
     setFees(next);
