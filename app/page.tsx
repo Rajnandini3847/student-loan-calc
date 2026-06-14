@@ -8,8 +8,8 @@ import { YearlyChart } from "@/components/YearlyChart";
 import { PrincipalVsInterest } from "@/components/PrincipalVsInterest";
 
 export default function CalculatorPage() {
-  const [fees, setFees] = useState(20_00_000);
-  const [loanAmount, setLoanAmount] = useState(20_00_000);
+  const [fees, setFees] = useState(15_00_000);
+  const [loanAmount, setLoanAmount] = useState(15_00_000);
   const [courseYears, setCourseYears] = useState(4);
   const [graceMonths, setGraceMonths] = useState(6);
   const [repaymentYears, setRepaymentYears] = useState(10);
